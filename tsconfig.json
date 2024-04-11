@@ -13,7 +13,7 @@
     "allowJs": true,
 
     // Check js files for errors
-    "checkJs": false,
+    "checkJs": true,
 
     // Output d.ts files to @types
     "outDir": "@types",
