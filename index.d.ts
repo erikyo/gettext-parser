@@ -22,7 +22,7 @@ export interface GetTextComment {
 export interface GetTextTranslation {
     msgctxt?: string;
     msgid: string;
-    msgid_plural?: string[] | string;
+    msgid_plural?: string;
     msgstr: string[];
     comments?: GetTextComment;
 }
@@ -63,3 +63,7 @@ export interface mo {
     parse: (buffer: Buffer | string, defaultCharset?: string) => GetTextTranslations;
     compile: (table: GetTextTranslations, options?: parserOptions) => Buffer;
 }
+
+export * from "./@types";
+
+export default { po, mo } as { po: po, mo: mo };
