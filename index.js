@@ -25,3 +25,7 @@ export const mo = {
   parse: moParser,
   compile: moCompiler
 };
+
+export default { po, mo };
+
+po.parse( new Buffer( 'test' ), 'iso-8859-1' );
