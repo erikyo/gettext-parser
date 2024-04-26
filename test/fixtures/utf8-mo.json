@@ -1,86 +1,70 @@
 {
-    "charset": "utf-8",
-    "headers": {
-        "Project-Id-Version": "gettext-parser",
-        "Report-Msgid-Bugs-To": "andris@node.ee",
-        "PO-Revision-Date": "2012-05-18 14:37+0300",
-        "Last-Translator": "Andris Reinman <andris@kreata.ee>",
-        "Language-Team": "gettext-parser <andris@node.ee>",
-        "Language": "",
-        "Content-Type": "text/plain; charset=utf-8",
-        "Content-Transfer-Encoding": "8bit",
-        "Plural-Forms": "nplurals=2; plural=(n!=1);",
-        "mime-version": "1.0",
-        "x-poedit-language": "Estonian",
-        "x-poedit-country": "ESTONIA",
-        "x-poedit-sourcecharset": "utf-8"
-    },
-    "translations": {
-        "": {
-            "": {
-                "msgid": "",
-                "msgstr": [
-                    "Project-Id-Version: gettext-parser\nReport-Msgid-Bugs-To: andris@node.ee\nPO-Revision-Date: 2012-05-18 14:37+0300\nLast-Translator: Andris Reinman <andris@kreata.ee>\nLanguage-Team: gettext-parser <andris@node.ee>\nLanguage: \nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=(n!=1);\nmime-version: 1.0\nx-poedit-language: Estonian\nx-poedit-country: ESTONIA\nx-poedit-sourcecharset: utf-8\n"
-                ]
-            },
-            "o1": {
-                "msgid": "o1",
-                "msgstr": [
-                    "t1"
-                ]
-            },
-            "o2-1": {
-                "msgid": "o2-1",
-                "msgid_plural": "o2-2\no2-3\no2-4",
-                "msgstr": [
-                    "t2-1",
-                    "t2-2"
-                ]
-            },
-            "o3-õäöü": {
-                "msgid": "o3-õäöü",
-                "msgstr": [
-                    "t3-žš"
-                ]
-            },
-            "o4": {
-                "msgid": "o4",
-                "msgstr": [
-                   "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
-                ]
-            },
-            "test": {
-                "msgid": "test",
-                "msgstr": [
-                    "test"
-                ]
-            },
-            "\"\\'\t": {
-                "msgid": "\"\\'\t",
-                "msgstr": [
-                    "\"\\'\t"
-                ]
-            }
-        },
-        "c1": {
-            "co1": {
-                "msgid": "co1",
-                "msgctxt": "c1",
-                "msgstr": [
-                    "ct1"
-                ]
-            }
-        },
-        "c2": {
-            "co2-1": {
-                "msgid": "co2-1",
-                "msgctxt": "c2",
-                "msgid_plural": "co2-2",
-                "msgstr": [
-                    "ct2-1",
-                    "ct2-2"
-                ]
-            }
-        }
-    }
+	"charset": "utf-8",
+	"headers": {
+		"Project-Id-Version": "gettext-parser",
+		"Report-Msgid-Bugs-To": "andris@node.ee",
+		"PO-Revision-Date": "2012-05-18 14:37+0300",
+		"Last-Translator": "Andris Reinman <andris@kreata.ee>",
+		"Language-Team": "gettext-parser <andris@node.ee>",
+		"Language": "",
+		"Content-Type": "text/plain; charset=utf-8",
+		"Content-Transfer-Encoding": "8bit",
+		"Plural-Forms": "nplurals=2; plural=(n!=1);",
+		"mime-version": "1.0",
+		"x-poedit-language": "Estonian",
+		"x-poedit-country": "ESTONIA",
+		"x-poedit-sourcecharset": "utf-8"
+	},
+	"translations": {
+		"": {
+			"": {
+				"msgid": "",
+				"msgstr": [
+					"Project-Id-Version: gettext-parser\nReport-Msgid-Bugs-To: andris@node.ee\nPO-Revision-Date: 2012-05-18 14:37+0300\nLast-Translator: Andris Reinman <andris@kreata.ee>\nLanguage-Team: gettext-parser <andris@node.ee>\nLanguage: \nContent-Type: text/plain; charset=utf-8\nContent-Transfer-Encoding: 8bit\nPlural-Forms: nplurals=2; plural=(n!=1);\nmime-version: 1.0\nx-poedit-language: Estonian\nx-poedit-country: ESTONIA\nx-poedit-sourcecharset: utf-8\n"
+				]
+			},
+			"o1": {
+				"msgid": "o1",
+				"msgstr": ["t1"]
+			},
+			"o2-1": {
+				"msgid": "o2-1",
+				"msgid_plural": "o2-2\no2-3\no2-4",
+				"msgstr": ["t2-1", "t2-2"]
+			},
+			"o3-õäöü": {
+				"msgid": "o3-õäöü",
+				"msgstr": ["t3-žš"]
+			},
+			"o4": {
+				"msgid": "o4",
+				"msgstr": [
+					"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."
+				]
+			},
+			"test": {
+				"msgid": "test",
+				"msgstr": ["test"]
+			},
+			"\"\\'\t": {
+				"msgid": "\"\\'\t",
+				"msgstr": ["\"\\'\t"]
+			}
+		},
+		"c1": {
+			"co1": {
+				"msgid": "co1",
+				"msgctxt": "c1",
+				"msgstr": ["ct1"]
+			}
+		},
+		"c2": {
+			"co2-1": {
+				"msgid": "co2-1",
+				"msgctxt": "c2",
+				"msgid_plural": "co2-2",
+				"msgstr": ["ct2-1", "ct2-2"]
+			}
+		}
+	}
 }

@@ -1,60 +1,48 @@
 {
-  "name": "gettext-parser",
-  "description": "Parse and compile gettext po and mo files to/from json, nothing more, nothing less",
-  "version": "8.0.0",
-  "author": "Andris Reinman",
-  "contributors": [
-    {
-      "name": "Sam Hauglustaine"
-    }
-  ],
-  "homepage": "http://github.com/smhg/gettext-parser",
-  "repository": {
-    "type": "git",
-    "url": "http://github.com/smhg/gettext-parser.git"
-  },
-  "type": "module",
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "lint": "eslint lib/*.js test/*.js index.js",
-    "test-generate-mo": "msgfmt test/fixtures/latin13.po -o test/fixtures/latin13.mo & msgfmt test/fixtures/utf8.po -o test/fixtures/utf8.mo & msgfmt test/fixtures/obsolete.po -o test/fixtures/obsolete.mo",
-    "test": "mocha",
-    "preversion": "npm run lint && npm test",
-    "postversion": "git push && git push --tags",
-    "prepublish": "tsc && npm run lint && npm run test"
-  },
-  "main": "./index.js",
-  "types": "./index.d.ts",
-  "license": "MIT",
-  "dependencies": {
-    "content-type": "^1.0.5",
-    "encoding": "^0.1.13",
-    "readable-stream": "^4.5.2",
-    "safe-buffer": "^5.2.1"
-  },
-  "devDependencies": {
-    "@types/chai": "latest",
-    "@types/content-type": "^1.1.8",
-    "@types/mocha": "latest",
-    "@types/readable-stream": "^4.0.11",
-    "@typescript-eslint/eslint-plugin": "^6.18.1",
-    "@typescript-eslint/parser": "^6.14.0",
-    "chai": "^5.0.3",
-    "eslint": "^8.56.0",
-    "eslint-config-standard": "^17.1.0",
-    "eslint-plugin-import": "^2.29.1",
-    "eslint-plugin-n": "^16.6.2",
-    "eslint-plugin-promise": "^6.1.1",
-    "mocha": "^10.3.0",
-    "typescript": "^5.4.4"
-  },
-  "keywords": [
-    "i18n",
-    "l10n",
-    "gettext",
-    "mo",
-    "po"
-  ]
+	"name": "gettext-parser",
+	"description": "Parse and compile gettext po and mo files to/from json, nothing more, nothing less",
+	"version": "8.0.0",
+	"author": "Andris Reinman",
+	"contributors": [
+		{
+			"name": "Sam Hauglustaine"
+		}
+	],
+	"homepage": "http://github.com/smhg/gettext-parser",
+	"repository": {
+		"type": "git",
+		"url": "http://github.com/smhg/gettext-parser.git"
+	},
+	"type": "module",
+	"engines": {
+		"node": ">=14"
+	},
+	"scripts": {
+		"lint": "npx @biomejs/biome check --apply src test",
+		"test": "vitest",
+		"build": "node build.mjs",
+		"types": "tsc --emitDeclarationOnly"
+	},
+	"main": "./index.js",
+	"types": "./index.d.ts",
+	"license": "MIT",
+	"dependencies": {
+		"content-type": "^1.0.5",
+		"encoding": "^0.1.13",
+		"readable-stream": "^4.5.2",
+		"safe-buffer": "^5.2.1"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "1.7.1",
+		"@types/chai": "latest",
+		"@types/content-type": "^1.1.8",
+		"@types/mocha": "latest",
+		"@types/readable-stream": "^4.0.11",
+		"@typescript-eslint/eslint-plugin": "^6.18.1",
+		"@typescript-eslint/parser": "^6.14.0",
+		"vitest": "^1.5.2",
+		"typescript": "^5.4.4",
+		"esbuild": "^0.20.2"
+	},
+	"keywords": ["i18n", "l10n", "gettext", "mo", "po"]
 }

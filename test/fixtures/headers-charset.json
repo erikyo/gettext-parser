@@ -1,23 +1,21 @@
 {
-  "charset": "utf-8",
-  "headers": {
-    "Content-Type": "text/plain; charset=UTF-8",
-    "Project-Id-Version": "PACKAGE VERSION"
-  },
-  "translations": {
-    "": {
-      "": {
-        "msgid": "",
-        "msgstr": [
-          "Project-Id-Version: PACKAGE VERSION\nContent-Type: text/plain; charset=UTF-8\n"
-        ]
-      },
-      "test": {
-        "msgid": "test",
-        "msgstr": [
-          "test"
-        ]
-      }
-    }
-  }
+	"charset": "utf-8",
+	"headers": {
+		"Content-Type": "text/plain; charset=UTF-8",
+		"Project-Id-Version": "PACKAGE VERSION"
+	},
+	"translations": {
+		"": {
+			"": {
+				"msgid": "",
+				"msgstr": [
+					"Project-Id-Version: PACKAGE VERSION\nContent-Type: text/plain; charset=UTF-8\n"
+				]
+			},
+			"test": {
+				"msgid": "test",
+				"msgstr": ["test"]
+			}
+		}
+	}
 }

@@ -1,36 +1,16 @@
 {
-  "compilerOptions": {
-    "noImplicitAny": true,
-    "removeComments": false,
-    "module": "Node16",
-    "moduleResolution": "Node16",
-    "target": "ES2015",
-
-    // Strict mode
-    "strict": true,
-
-    // Allow javascript files
-    "allowJs": true,
-
-    // Check js files for errors
-    "checkJs": true,
-
-    // Output d.ts files to @types
-    "outDir": "@types",
-
-    // Generate d.ts files
-    "declaration": true,
-
-    // This compiler run should
-    // only output d.ts files
-    "emitDeclarationOnly": true,
-    // Minify
-    "pretty": false,
-    // Skip lib check when compiling
-    "skipLibCheck": true
-  },
-  "include": [
-    "lib/**/*.js",
-    "index.d.ts"
-  ]
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"removeComments": false,
+		"module": "Node16",
+		"moduleResolution": "Node16",
+		"target": "ES2015",
+		"strict": true,
+		"outDir": "lib/@types",
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"pretty": false,
+		"skipLibCheck": true
+	},
+	"include": ["lib/**/*.js", "index.d.ts"]
 }

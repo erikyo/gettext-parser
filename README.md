@@ -1,6 +1,13 @@
 gettext-parser [![ci](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml)
 ==============
 
+THIS IS A FORK OF [gettext-parser](https://github.com/smhg/gettext-parser)
+
+Same api and same options but refactored to be strictly typed and bundled with esbuild to cjs and esm + many more features
+check out [changelog](CHANGELOG.md)
+
+## About
+
 Parse and compile gettext *po* and *mo* files with node.js, nothing more, nothing less.
 
 > *Please note:* starting with version 3 only latest LTS and latest stable node versions are supported. **Use version 2 with older node versions.**
