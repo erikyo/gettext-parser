@@ -1,6 +1,7 @@
 import contentType from "content-type";
-import encoding from "encoding";
 import { Buffer } from "safe-buffer";
+import encoding from "./encoding.js";
+import convert from "./encoding.js";
 import {
 	HEADERS,
 	compareMsgid,
@@ -123,10 +124,7 @@ class Compiler {
 
 		list.push({
 			msgid: Buffer.alloc(0),
-			msgstr: encoding.convert(
-				generateHeader(this._table.headers),
-				this._table.charset,
-			),
+			msgstr: convert(generateHeader(this._table.headers), this._table.charset),
 		});
 
 		Object.keys(this._table.translations).forEach((msgctxt) => {

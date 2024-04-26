@@ -1,23 +1,30 @@
+import { Transform, type TransformOptions } from "node:stream";
 import util from "node:util";
-import encoding from "encoding";
-import { Transform } from "readable-stream";
+import convert from "./encoding.js";
 import {
 	formatCharset,
 	parseHeader,
 	parseNPluralFromHeadersSafely,
 } from "./shared.js";
-import type { GetTextTranslationRaw } from "./types.js";
+import type {
+	GetTextTranslation,
+	GetTextTranslationRaw,
+	parserOptions,
+} from "./types.js";
 
 /**
  * The PO parser options
- * @typedef {{ defaultCharset?: string, validation?: boolean }} Options
  */
+interface Options {
+	defaultCharset?: string;
+	validation?: boolean;
+}
 
 /**
  * Parses a PO object into translation table
  *
  * @param {string | Buffer} input PO object
- * @param {Options} [options] Optional options with defaultCharset and validation
+ * @param {parserOptions} options Optional options with defaultCharset and validation
  */
 export function parse(input, options = {}) {
 	const parser = new PoParser(input, options);
@@ -29,9 +36,12 @@ export function parse(input, options = {}) {
  * Parses a PO stream, emits translation table in object mode
  *
  * @param {Options} [options] Optional options with defaultCharset and validation
- * @param {import('readable-stream').TransformOptions} [transformOptions] Optional stream options
+ * @param {TransformOptions} [transformOptions] Optional stream options
  */
-export function stream(options = {}, transformOptions = {}) {
+export function stream(
+	options: Options = {},
+	transformOptions: TransformOptions = {},
+) {
 	return new PoParserTransform(options, transformOptions);
 }
 
@@ -53,6 +63,12 @@ class PoParser {
 		key: RegExp;
 		keyNames: RegExp;
 	};
+	private _lex: never[];
+	private _escaped: boolean;
+	private _node: { value: string; obsolete: boolean };
+	private _state: number;
+	_lineNumber: number;
+	_fileContents: string;
 	/**
 	 * The PO parser
 	 *
@@ -62,8 +78,8 @@ class PoParser {
 	 * @property args.validation the validation
 	 */
 	constructor(
-		fileContents,
-		{ defaultCharset = "iso-8859-1", validation = false },
+		fileContents: string | Buffer | undefined,
+		{ defaultCharset = "iso-8859-1", validation = false }: Options,
 	) {
 		this._validation = validation;
 		this._charset = defaultCharset;
@@ -100,10 +116,8 @@ class PoParser {
 			keyNames: /^(?:msgctxt|msgid(?:_plural)?|msgstr(?:\[\d+])?)$/,
 		};
 
-		/** @type {any[]} the lexer */
 		this._lex = [];
 		this._escaped = false;
-		/** @property {PoNode} node The lexer node */
 		this._node = {
 			value: "",
 			obsolete: false,
@@ -165,7 +179,7 @@ class PoParser {
 	 * @return {string} the string res
 	 */
 	_toString(buf) {
-		return encoding.convert(buf, "utf-8", this._charset).toString("utf-8");
+		return convert(buf, "utf-8", this._charset).toString("utf-8");
 	}
 
 	/**
@@ -276,10 +290,10 @@ class PoParser {
 	/**
 	 * Join multi line strings
 	 *
-	 * @param {import('../index.d.ts').GetTextTranslationRaw[]} tokens Parsed tokens
-	 * @return {import('../index.d.ts').GetTextTranslationRaw[]} Parsed tokens, with multi line strings joined into one
+	 * @param {GetTextTranslationRaw[]} tokens Parsed tokens
+	 * @return {GetTextTranslationRaw[]} Parsed tokens, with multi line strings joined into one
 	 */
-	_joinStringValues(tokens) {
+	_joinStringValues(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
 		const response = [];
 		let lastNode;
 
@@ -295,7 +309,7 @@ class PoParser {
 				tokens[i].type === this.types.comments &&
 				lastNode.type === this.types.comments
 			) {
-				lastNode.value += "\n" + tokens[i].value;
+				lastNode.value += `\n${tokens[i].value}`;
 			} else {
 				response.push(tokens[i]);
 				lastNode = tokens[i];
@@ -310,7 +324,7 @@ class PoParser {
 	 *
 	 * @param {import('../index.d.ts').GetTextTranslationRaw[]} tokens Parsed tokens
 	 */
-	_parseComments(tokens) {
+	_parseComments(tokens: GetTextTranslationRaw[]) {
 		// parse comments
 		tokens.forEach((node) => {
 			if (!node || node.type !== this.types.comments) {
@@ -483,10 +497,10 @@ class PoParser {
 			msgid = "",
 			msgid_plural = "", // eslint-disable-line camelcase
 			msgstr = [],
-		},
-		translations,
-		msgctxt,
-		nplurals,
+		}: GetTextTranslationRaw,
+		translations: GetTextTranslation,
+		msgctxt: string,
+		nplurals: number,
 	) {
 		if (!this._validation) {
 			return;
@@ -496,14 +510,13 @@ class PoParser {
 			throw new SyntaxError(
 				`Duplicate msgid error: entry "${msgid}" in "${msgctxt}" context has already been declared.`,
 			);
-			// eslint-disable-next-line camelcase
-		} else if (msgid_plural && msgstr.length !== nplurals) {
-			// eslint-disable-next-line camelcase
+		}
+		if (msgid_plural && msgstr.length !== nplurals) {
 			throw new RangeError(
 				`Plural forms range error: Expected to find ${nplurals} forms but got ${msgstr.length} for entry "${msgid_plural}" in "${msgctxt}" context.`,
 			);
-			// eslint-disable-next-line camelcase
-		} else if (!msgid_plural && msgstr.length !== 1) {
+		}
+		if (!msgid_plural && msgstr.length !== 1) {
 			throw new RangeError(
 				`Translation string range error: Extected 1 msgstr definitions associated with "${msgid}" in "${msgctxt}" context, found ${msgstr.length}.`,
 			);
@@ -565,8 +578,8 @@ class PoParser {
 	/**
 	 * Converts parsed tokens to a translation table
 	 *
-	 * @param {import('../index.d.ts').GetTextTranslationRaw[]} tokens Parsed tokens
-	 * @returns {import('../index.d.ts').GetTextTranslationRaw[]} Translation table
+	 * @param {GetTextTranslationRaw[]} tokens Parsed tokens
+	 * @returns {GetTextTranslationRaw[]} Translation table
 	 */
 	_finalize(tokens) {
 		let data = this._joinStringValues(tokens);
@@ -581,13 +594,18 @@ class PoParser {
 }
 
 class PoParserTransform {
+	private _parser: boolean;
+	options: TransformOptions;
+	private _tokens;
+	private _cache: never[];
+	private _cacheSize: number;
 	/**
 	 * Creates a transform stream for parsing PO input
 	 * @constructor
 	 * @param {Options} options Optional options with defaultCharset and validation
 	 * @param {import('readable-stream').TransformOptions} transformOptions Optional stream options
 	 */
-	constructor(options, transformOptions) {
+	constructor(options: Options, transformOptions: TransformOptions) {
 		this.options = options;
 		this._parser = false;
 		this._tokens = {};
@@ -609,7 +627,11 @@ class PoParserTransform {
 	 * @param {string=} encoding
 	 * @param {() => void=} done
 	 */
-	_transform(chunk, encoding, done) {
+	_transform(
+		chunk: string | Buffer | number[] | undefined,
+		encoding: string | undefined,
+		done: (arg0: unknown) => void,
+	) {
 		let i;
 		let len = 0;
 
@@ -624,7 +646,9 @@ class PoParserTransform {
 			// wait until the first 1kb before parsing headers for charset
 			if (this._cacheSize < this.initialTreshold) {
 				return setImmediate(done);
-			} else if (this._cacheSize) {
+			}
+
+			if (this._cacheSize) {
 				chunk = Buffer.concat(this._cache, this._cacheSize);
 				this._cacheSize = 0;
 				this._cache = [];

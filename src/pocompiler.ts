@@ -1,6 +1,6 @@
 import contentType from "content-type";
-import encoding from "encoding";
 import { Buffer } from "safe-buffer";
+import encoding from "./encoding.js";
 import {
 	HEADERS,
 	compareMsgid,
@@ -8,16 +8,21 @@ import {
 	formatCharset,
 	generateHeader,
 } from "./shared.js";
+import type {
+	GetTextTranslation,
+	GetTextTranslations,
+	parserOptions,
+} from "./types";
 
 /**
  * Exposes general compiler function. Takes a translation
  * object as a parameter and returns PO object
  *
- * @param {import('../index.d.ts').GetTextTranslations} table Translation object
- * @param {import('../index.d.ts').parserOptions} options Compiler options
+ * @param {GetTextTranslations} table Translation object
+ * @param {parserOptions} options Compiler options
  * @return {Buffer} Compiled PO object
  */
-export default function (table, options) {
+export default function (table: GetTextTranslations, options: parserOptions) {
 	/** @type {Compiler} */
 	const compiler = new Compiler(table, options);
 
@@ -26,11 +31,13 @@ export default function (table, options) {
 
 /** @type {import('../index.d.ts').Compiler} Compiler */
 class Compiler {
+	private _table: GetTextTranslations;
+	private _options: parserOptions;
 	/**
-	 * @param {import('../index.d.ts').GetTextTranslations} table
-	 * @param {import('../index.d.ts').parserOptions} options
+	 * @param {GetTextTranslations} table
+	 * @param {parserOptions} options
 	 */
-	constructor(table, options) {
+	constructor(table: GetTextTranslations, options: parserOptions) {
 		this._table = table;
 		this._options = options;
 
@@ -114,15 +121,15 @@ class Compiler {
 			},
 		];
 
-		types.forEach((type) => {
+		for (const type of types) {
 			if (!comments[type.key]) {
 				return;
 			}
 
-			comments[type.key].split(/\r?\n|\r/).forEach((line) => {
+			for (const line of comments[type.key].split(/\r?\n|\r/)) {
 				lines.push(`${type.prefix}${line}`);
-			});
-		});
+			}
+		}
 
 		return lines.join(this._options.eol);
 	}
@@ -130,12 +137,16 @@ class Compiler {
 	/**
 	 * Builds a PO string for a single translation object
 	 *
-	 * @param {import('../index.d.ts').GetTextTranslation} block Translation object
-	 * @param {import('../index.d.ts').GetTextTranslation} override Properties of this object will override `block` properties
+	 * @param {GetTextTranslation} block Translation object
+	 * @param {GetTextTranslation} override Properties of this object will override `block` properties
 	 * @param {boolean} [obsolete] Block is obsolete and must be commented out
 	 * @return {String} Translation string for a single object
 	 */
-	_drawBlock(block, override = {}, obsolete = false) {
+	_drawBlock(
+		block: GetTextTranslation,
+		override: GetTextTranslation,
+		obsolete = false,
+	) {
 		const response = [];
 		const msgctxt = override.msgctxt || block.msgctxt;
 		const msgid = override.msgid || block.msgid;

@@ -1,15 +1,19 @@
-import encoding from "encoding";
 import type { Buffer } from "safe-buffer";
+import encoding from "./encoding.js";
 import { formatCharset, parseHeader } from "./shared.js";
+import type { GetTextTranslations } from "./types";
 
 /**
  * Parses a binary MO object into translation table
  *
- * @param {Buffer} buffer Binary MO object
+ * @param {string | Buffer} buffer Binary MO object
  * @param {String} [defaultCharset] Default charset to use
  * @return {Object} Translation object
  */
-export default function (buffer: Buffer, defaultCharset = "iso-8859-1") {
+export default function (
+	buffer: string | Buffer,
+	defaultCharset = "iso-8859-1",
+) {
 	const parser = new Parser(buffer, defaultCharset);
 
 	return parser.parse();
@@ -41,13 +45,8 @@ class Parser {
 	private _writeFunc: string;
 	private _readFunc: string;
 	private _charset: string;
-	private _table: { charset: string; headers: {}; translations: {} };
-	/**
-	 * @param {Buffer} fileContents
-	 * @param {string} defaultCharset
-	 */
-	constructor(fileContents, defaultCharset = "iso-8859-1") {
-		/** @var {Buffer} _fileContents Binary MO object*/
+	private _table: GetTextTranslations;
+	constructor(fileContents: string | Buffer, defaultCharset = "iso-8859-1") {
 		this._fileContents = fileContents;
 
 		this._writeFunc = "writeUInt32LE";
@@ -74,7 +73,8 @@ class Parser {
 			this._writeFunc = "writeUInt32LE";
 
 			return true;
-		} else if (this._fileContents.readUInt32BE(0) === this.MAGIC) {
+		}
+		if (this._fileContents.readUInt32BE(0) === this.MAGIC) {
 			this._readFunc = "readUInt32BE";
 			this._writeFunc = "writeUInt32BE";
 

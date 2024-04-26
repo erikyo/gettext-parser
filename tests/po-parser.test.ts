@@ -2,16 +2,12 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import * as chai from "chai";
+import { describe, expect, it } from "vitest";
 import * as gettextParser from "../src/index.js";
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const readFile = promisify(fs.readFile);
-
-const expect = chai.expect;
-chai.config.includeStack = true;
 
 describe("PO Parser", () => {
 	describe("headers", () => {

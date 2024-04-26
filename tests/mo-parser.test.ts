@@ -2,17 +2,13 @@ import { readFile as fsReadFile } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
-import * as chai from "chai";
 import { describe, expect, it } from "vitest";
-import { mo } from "../index.js";
+import { mo } from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const readFile = promisify(fsReadFile);
-
-const expect = chai.expect;
-chai.config.includeStack = true;
 
 describe("MO Parser", () => {
 	describe("UTF-8", () => {

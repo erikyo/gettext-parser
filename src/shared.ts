@@ -41,7 +41,7 @@ export function parseHeader(str = "") {
 		 * @param {Headers} headers Array of headers
 		 * @param {string} line Current line
 		 */
-		(headers, line) => {
+		(headers: { [key: string]: string }, line: string) => {
 			const parts = line.split(":");
 			let key = (parts.shift() || "").trim();
 
@@ -66,7 +66,10 @@ export function parseHeader(str = "") {
  * @param fallback {Number} Fallback value
  * @returns {number} Parsed result
  */
-export function parseNPluralFromHeadersSafely(headers, fallback = 1) {
+export function parseNPluralFromHeadersSafely(
+	headers: { [key: string]: string },
+	fallback = 1,
+) {
 	const pluralForms = headers ? headers[PLURAL_FORMS] : false;
 
 	if (!pluralForms) {
@@ -86,7 +89,7 @@ export function parseNPluralFromHeadersSafely(headers, fallback = 1) {
  * @param {Headers} header Object of key value pairs
  * @return {String} Header string
  */
-export function generateHeader(header = {}) {
+export function generateHeader(header: { [key: string]: string } = {}): string {
 	const keys = Object.keys(header).filter((key) => !!key);
 
 	if (!keys.length) {
@@ -127,7 +130,7 @@ export function formatCharset(
  * @param {Number} [maxLen=76] Maximum allowed length for folded lines
  * @return {string[]} An array of lines
  */
-export function foldLine(str, maxLen = 76) {
+export function foldLine(str: string, maxLen = 76) {
 	const lines = [];
 	const len = str.length;
 	let curLine = "";
@@ -177,7 +180,10 @@ export function foldLine(str, maxLen = 76) {
  * @param {{msgid: string}} right with msgid next
  * @returns {number} comparator index
  */
-export function compareMsgid({ msgid: left }, { msgid: right }) {
+export function compareMsgid(
+	{ msgid: left }: { msgid: string },
+	{ msgid: right }: { msgid: string },
+): number {
 	if (left < right) {
 		return -1;
 	}
