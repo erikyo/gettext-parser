@@ -4,6 +4,7 @@ import type {
 	BufferReadFunc,
 	BufferWriteFunc,
 	GetTextTranslations,
+	TranslationEntry,
 } from "./types.js";
 
 /**
@@ -14,40 +15,36 @@ import type {
  * @param {String} [defaultCharset] Default charset to use
  */
 export class MoParser {
-	private _fileContents: Buffer | string;
-	private _writeFunc: BufferWriteFunc;
-	private _readFunc: BufferReadFunc;
+	private _fileContents: Buffer;
+
+	/**
+	 * Method name for writing int32 values, default littleendian
+	 */
+	private _writeFunc: BufferWriteFunc = "writeUInt32LE";
+
+	/**
+	 * Method name for reading int32 values, default littleendian
+	 */
+	private _readFunc: BufferReadFunc = "readUInt32LE";
 	private _charset: string;
 	private _table: GetTextTranslations;
-	MAGIC: number;
+	/**
+	 * Magic constant to check the endianness of the input file
+	 */
+	MAGIC = 0x950412de;
 	_offsetOriginals?: number;
 	_offsetTranslations?: number;
-	private _revision: any;
-	private _total: any;
-	constructor(fileContents: string | Buffer, defaultCharset = "iso-8859-1") {
+	private _revision?: number = 0;
+	private _total = 0;
+	constructor(fileContents: Buffer, defaultCharset = "iso-8859-1") {
 		this._fileContents = fileContents;
-
-		/**
-		 * Method name for writing int32 values, default littleendian
-		 */
-		this._writeFunc = "writeUInt32LE";
-
-		/**
-		 * Method name for reading int32 values, default littleendian
-		 */
-		this._readFunc = "readUInt32LE";
 
 		this._charset = defaultCharset;
 
 		this._table = {
 			charset: this._charset,
-			headers: undefined,
 			translations: {},
 		};
-		/**
-		 * Magic constant to check the endianness of the input file
-		 */
-		this.MAGIC = 0x950412de;
 	}
 
 	/**
@@ -56,19 +53,13 @@ export class MoParser {
 	 * @return {Boolean} Return true if magic was detected
 	 */
 	_checkMagick() {
-		if (
-			typeof this._fileContents !== "string" &&
-			this._fileContents.readUInt32LE(0) === this.MAGIC
-		) {
+		if (this._fileContents.readUInt32LE(0) === this.MAGIC) {
 			this._readFunc = "readUInt32LE";
 			this._writeFunc = "writeUInt32LE";
 
 			return true;
 		}
-		if (
-			typeof this._fileContents !== "string" &&
-			this._fileContents.readUInt32BE(0) === this.MAGIC
-		) {
+		if (this._fileContents.readUInt32BE(0) === this.MAGIC) {
 			this._readFunc = "readUInt32BE";
 			this._writeFunc = "writeUInt32BE";
 
@@ -152,37 +143,38 @@ export class MoParser {
 	 * @param {String} msgstr Translation for the original string
 	 */
 	_addString(msgidRaw: string | Buffer, msgstr: string) {
-		const translation = {};
-		let msgctxt;
-		let msgidPlural;
-		let msgid = msgidRaw;
+		// Convert Buffer to string if necessary
+		const msgidString =
+			msgidRaw instanceof Buffer ? msgidRaw.toString() : msgidRaw;
 
-		msgid = msgid.split("\u0004");
-		if (msgid.length > 1) {
-			msgctxt = msgid.shift();
-			translation.msgctxt = msgctxt;
-		} else {
-			msgctxt = "";
+		// Initialize the translation object
+		const translation: TranslationEntry = {
+			msgid: "",
+			msgstr: [],
+		};
+
+		const contextSplit = msgidString.split("\u0004");
+		if (contextSplit.length > 1) {
+			translation.msgctxt = contextSplit[0];
 		}
-		msgid = msgid.join("\u0004");
+		// Use the last part of the contextSplit as msgid, which avoids unnecessary join operations
+		const parts = contextSplit[contextSplit.length - 1].split("\u0000");
+		translation.msgid = parts[0];
 
-		const parts = msgid.split("\u0000");
-		msgid = parts.shift();
-
-		translation.msgid = msgid;
-
-		if ((msgidPlural = parts.join("\u0000"))) {
-			translation.msgid_plural = msgidPlural;
-		}
-
-		msgstr = msgstr.split("\u0000");
-		translation.msgstr = [].concat(msgstr || []);
-
-		if (!this._table.translations[msgctxt]) {
-			this._table.translations[msgctxt] = {};
+		// Add msgid_plural only if it exists
+		if (parts.length > 1) {
+			translation.msgid_plural = parts[1];
 		}
 
-		this._table.translations[msgctxt][msgid] = translation;
+		// Directly assign msgstr array if it's not empty
+		translation.msgstr = msgstr ? msgstr.split("\u0000") : [];
+
+		const context = translation.msgctxt || "";
+		if (!this._table.translations[context]) {
+			this._table.translations[context] = {};
+		}
+
+		this._table.translations[context][translation.msgid] = translation;
 	}
 
 	/**

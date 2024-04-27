@@ -41,8 +41,8 @@ export const po: {
  */
 export const mo: {
 	parse: (
-		buffer: Buffer | string,
-		defaultCharset: string,
+		buffer: Buffer,
+		defaultCharset?: string,
 	) => GetTextTranslations | false;
 	compile: (table: GetTextTranslations) => Buffer;
 } = {

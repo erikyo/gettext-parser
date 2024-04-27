@@ -19,9 +19,9 @@ async function run() {
 		tsconfig: "tsconfig.json",
 		minify: isDev,
 		platform: "node",
-		legalComments: "none",
+		bundle: true,
 		target: "es2015",
-		sourcemap: isDev,
+		sourcemap: !isDev,
 	});
 
 	const esm = es.build({
@@ -30,7 +30,7 @@ async function run() {
 		platform: "node",
 		entryPoints: ["src/**/*.ts"],
 		outdir: "lib/esm",
-		legalComments: "none",
+		target: "es2022",
 		treeShaking: true,
 		splitting: true,
 		minify: true,

@@ -1,3 +1,5 @@
+import type { TranslationEntry } from "./types.js";
+
 const PLURAL_FORMS: string = "Plural-Forms";
 
 type Headers = Map<string, string>;
@@ -162,12 +164,12 @@ export function foldLine(str: string, maxLen = 76): string[] {
  *
  * @param left with msgid prev
  * @param right with msgid next
- * @returns {number} comparator index
+ * @returns comparator index
  */
 export function compareMsgid(
-	{ msgid: left }: { msgid: string },
-	{ msgid: right }: { msgid: string },
-): number {
+	{ msgid: left }: TranslationEntry,
+	{ msgid: right }: TranslationEntry,
+) {
 	if (left < right) {
 		return -1;
 	}

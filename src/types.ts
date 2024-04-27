@@ -1,3 +1,5 @@
+import type { TransformOptions } from "node:stream";
+
 export interface GetTextComment {
 	translator?: string;
 	reference?: string;
@@ -6,7 +8,7 @@ export interface GetTextComment {
 	previous?: string;
 }
 
-export interface GetTextTranslation {
+export interface TranslationEntry {
 	msgctxt?: string;
 	msgid: string;
 	msgid_plural?: string;
@@ -14,7 +16,7 @@ export interface GetTextTranslation {
 	comments?: GetTextComment;
 }
 
-export interface GetTextTranslationRaw extends GetTextTranslation {
+export interface GetTextTranslationRaw extends TranslationEntry {
 	value: string | { [key: string]: string };
 	type: number;
 	key: string;
@@ -24,31 +26,15 @@ export interface GetTextTranslationRaw extends GetTextTranslation {
 }
 
 export interface GetTextTranslations {
-	obsolete?:
-		| boolean
-		| { [msgctxt: string]: { [msgId: string]: GetTextTranslation } };
+	obsolete?: { [msgctxt: string]: { [msgId: string]: TranslationEntry } };
 	charset: string;
-	headers: { [headerName: string]: string };
+	headers?: Record<string, string>;
 	translations: gettextTranslation;
 }
 
 export type gettextTranslation = {
-	[msgctxt: string]: { [msgId: string]: GetTextTranslation };
+	[context: string]: { [msgId: string]: TranslationEntry };
 };
-
-export interface parserOptions {
-	foldLength: number;
-	eol: string;
-	defaultCharset: string;
-	validation: boolean;
-	escapeCharacters: boolean;
-	sort: boolean;
-}
-
-export interface Compiler {
-	_table: GetTextTranslations;
-	compile(): Buffer | string | undefined | null;
-}
 
 export interface LexerError extends SyntaxError {
 	lineNumber: number;
@@ -70,7 +56,21 @@ export interface poParserOptions {
 	validation?: boolean;
 }
 
+export interface parserOptions {
+	foldLength: number;
+	eol: string;
+	defaultCharset: string;
+	validation: boolean;
+	escapeCharacters: boolean;
+	sort: boolean;
+}
+
+export interface PoParserTransformOptions extends TransformOptions {
+	initialTreshold?: number;
+}
+
 export interface PoNode {
+	key: string;
 	comments?: GetTextComment;
 	msgctxt?: string;
 	msgid?: string;

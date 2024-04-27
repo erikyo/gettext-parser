@@ -1,6 +1,5 @@
-import type { TransformOptions } from "node:stream";
 import PoParserTransform from "./PoParserTransform.js";
-import type { poParserOptions } from "./types.js";
+import type { PoParserTransformOptions, poParserOptions } from "./types.js";
 
 /**
  * Parses a PO stream, emits translation table in object mode
@@ -10,7 +9,7 @@ import type { poParserOptions } from "./types.js";
  */
 export default function StreamPo(
 	options: poParserOptions = {},
-	transformOptions: TransformOptions = {},
+	transformOptions: PoParserTransformOptions = {},
 ) {
 	return new PoParserTransform(options, transformOptions);
 }

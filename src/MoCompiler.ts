@@ -8,13 +8,14 @@ import {
 } from "./shared.js";
 import type {
 	BufferWriteFunc,
-	GetTextTranslation,
+	GetTextTranslationRaw,
 	GetTextTranslations,
+	TranslationEntry,
 } from "./types.js";
 
 class MoCompiler {
 	_table: GetTextTranslations;
-	_translations: GetTextTranslations["translations"];
+	_translations: GetTextTranslations["translations"][];
 	_writeFunc: BufferWriteFunc;
 	MAGIC: number;
 	/**
@@ -37,7 +38,8 @@ class MoCompiler {
 				if (lowerKey && HEADERS.has(lowerKey)) {
 					// POT-Creation-Date is removed in MO (see https://savannah.gnu.org/bugs/?49654)
 					if (lowerKey !== "pot-creation-date") {
-						result[HEADERS.get(lowerKey)] = headers[key];
+						const newKey = HEADERS.get(lowerKey);
+						if (newKey) result[newKey] = headers[key];
 					}
 				} else {
 					result[key] = headers[key];
@@ -49,26 +51,32 @@ class MoCompiler {
 		);
 
 		// filter out empty translations
-		translations = Object.keys(translations).reduce((result, msgctxt) => {
-			const context = translations[msgctxt];
-			const msgs = Object.keys(context).reduce((result, msgid) => {
-				const hasTranslation = context[msgid].msgstr.some(
-					(item) => !!item.length,
+		translations = Object.keys(translations).reduce(
+			(result: GetTextTranslations["translations"], msgctxt: string) => {
+				const context = translations[msgctxt];
+				const msgs = Object.keys(context).reduce(
+					(result: { [msgid: string]: TranslationEntry }, msgid: string) => {
+						const hasTranslation = context[msgid].msgstr.some(
+							(item) => !!item.length,
+						);
+
+						if (hasTranslation) {
+							result[msgid] = context[msgid];
+						}
+
+						return result;
+					},
+					{},
 				);
 
-				if (hasTranslation) {
-					result[msgid] = context[msgid];
+				if (Object.keys(msgs).length) {
+					result[msgctxt] = msgs;
 				}
 
 				return result;
-			}, {});
-
-			if (Object.keys(msgs).length) {
-				result[msgctxt] = msgs;
-			}
-
-			return result;
-		}, {});
+			},
+			{},
+		);
 
 		this._table.translations = translations;
 		this._table.headers = headers;
@@ -87,6 +95,9 @@ class MoCompiler {
 	 * Handles header values, replaces or adds (if needed) a charset property
 	 */
 	_handleCharset() {
+		if (!this._table.headers) {
+			this._table.headers = {};
+		}
 		const ct = contentType.parse(
 			this._table.headers["Content-Type"] || "text/plain",
 		);
@@ -121,18 +132,22 @@ class MoCompiler {
 			) as Buffer,
 		});
 
+		const result = [];
+
 		for (const msgctxt in this._table.translations) {
 			for (const msgid of Object.keys(this._table.translations[msgctxt])) {
-				if (typeof this._table.translations[msgctxt][msgid] !== "object") {
+				const entry = this._table.translations[msgctxt][msgid];
+				// Ignore empty object translations
+				if (typeof entry !== "object") {
 					continue;
 				}
 
+				// skip empty translations
 				if (msgctxt === "" && msgid === "") {
 					continue;
 				}
 
-				const msgidPlural =
-					this._table.translations[msgctxt][msgid].msgid_plural;
+				const msgidPlural = entry.msgid_plural;
 				let key = msgid;
 
 				if (msgctxt) {
@@ -143,8 +158,7 @@ class MoCompiler {
 					key += `\u0000${msgidPlural}`;
 				}
 
-				const value =
-					this._table.translations[msgctxt][msgid].msgstr?.join("\u0000");
+				const value = entry.msgstr?.join("\u0000") || "";
 
 				list.push({
 					msgid: convert(key, this._table.charset) as Buffer,
@@ -204,7 +218,7 @@ class MoCompiler {
 	 * @return {Buffer} Compiled MO object
 	 */
 	_build(
-		list: GetTextTranslation[],
+		list: { msgid: Buffer; msgstr: Buffer }[],
 		size: { msgid: number; msgstr: number; total: number },
 	): Buffer {
 		const returnBuffer: Buffer = Buffer.alloc(size.total);
@@ -255,11 +269,11 @@ class MoCompiler {
 	 *
 	 * @return {Buffer} Compiled MO object
 	 */
-	compile() {
+	compile(): Buffer {
 		const list = this._generateList();
 		const size = this._calculateSize(list);
 
-		list.sort(compareMsgid);
+		list.sort(compareMsgid as (a: unknown, b: unknown) => number);
 
 		return this._build(list, size);
 	}

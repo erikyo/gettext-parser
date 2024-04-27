@@ -4,22 +4,21 @@ import {
 	parseHeader,
 	parseNPluralFromHeadersSafely,
 } from "./shared.js";
-import {
-	type GetTextComment,
-	GetTextTranslation,
-	type GetTextTranslationRaw,
-	type GetTextTranslations,
-	type LexerError,
-	type PoNode,
-	type State,
-	type gettextTranslation,
-	type parserOptions,
+import type {
+	GetTextComment,
+	GetTextTranslationRaw,
+	GetTextTranslations,
+	LexerError,
+	PoNode,
+	State,
+	gettextTranslation,
+	poParserOptions,
 } from "./types.js";
 
 class PoParser {
 	private _charset: string;
 	private _escaped: boolean;
-	private _node: PoNode;
+	private _node: Partial<PoNode>;
 	private _state: number | undefined;
 	_validation: boolean;
 	states: State;
@@ -37,7 +36,7 @@ class PoParser {
 
 	constructor(
 		fileContents: string | Buffer,
-		{ defaultCharset = "iso-8859-1", validation = false }: parserOptions,
+		{ defaultCharset = "iso-8859-1", validation = false }: poParserOptions,
 	) {
 		this._validation = validation;
 		this._charset = defaultCharset;
@@ -219,7 +218,7 @@ class PoParser {
 					break;
 				case this.states.key:
 					if (!chr.match(this.symbols.key) && this !== null) {
-						if (!this._node.value.match(this.symbols.keyNames)) {
+						if (!this._node.value?.match(this.symbols.keyNames)) {
 							const err: Partial<LexerError> = new SyntaxError(
 								`Error parsing PO data: Invalid key name "${this._node.value}" at line ${this._lineNumber}. This can be caused by an unescaped quote character in a msgid or msgstr value.`,
 							);
@@ -333,27 +332,29 @@ class PoParser {
 	 */
 	_handleKeys(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
 		const response = [];
-		let lastNode: PoNode;
+		let lastNode: Partial<PoNode> = {};
 
 		for (let i = 0, len = tokens.length; i < len; i++) {
 			if (tokens[i].type === this.types.key) {
-				lastNode = {
-					key: tokens[i].value,
-				};
+				lastNode = {};
+				lastNode.key = tokens[i].value as string;
 				if (tokens[i].obsolete) {
 					lastNode.obsolete = true;
 				}
 				if (i && tokens[i - 1].type === this.types.comments) {
-					lastNode.comments = tokens[i - 1].value;
+					lastNode.comments = tokens[i - 1].value as GetTextComment;
 				}
 				lastNode.value = "";
 				response.push(lastNode);
-			} else if (tokens[i].type === this.types.string && lastNode) {
-				lastNode.value += tokens[i].value;
+			} else if (
+				tokens[i].type === this.types.string &&
+				typeof lastNode !== "undefined"
+			) {
+				lastNode.value += tokens[i].value as string;
 			}
 		}
 
-		return response;
+		return response as GetTextTranslationRaw[];
 	}
 
 	/**
@@ -364,7 +365,7 @@ class PoParser {
 	 */
 	_handleValues(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
 		const response: GetTextTranslationRaw[] = [];
-		let lastNode: Partial<GetTextTranslationRaw> | null = null;
+		let lastNode: Partial<GetTextTranslationRaw> | undefined = undefined;
 		let curContext: string | { [key: string]: string } | false = false;
 		let curComments: GetTextComment | false = false;
 
@@ -410,7 +411,7 @@ class PoParser {
 					lastNode.msgid_plural = tokens[i].value as string;
 				}
 
-				if (tokens[i].comments && !lastNode?.comments) {
+				if (tokens[i].comments && lastNode && !lastNode?.comments) {
 					lastNode.comments = tokens[i].comments as GetTextComment;
 				}
 
@@ -504,6 +505,7 @@ class PoParser {
 					table.obsolete[msgctxt] = {};
 				}
 
+				// biome-ignore lint/performance/noDelete: <explanation>
 				delete tokens[i].obsolete;
 
 				table.obsolete[msgctxt][tokens[i].msgid] = tokens[i];

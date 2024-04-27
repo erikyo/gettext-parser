@@ -9,8 +9,8 @@ import {
 } from "./shared.js";
 import type {
 	GetTextComment,
-	GetTextTranslation,
 	GetTextTranslations,
+	TranslationEntry,
 	parserOptions,
 } from "./types.js";
 
@@ -72,11 +72,10 @@ class PoCompiler {
 	 * Converts a comment object to a comment string. The comment object is
 	 * in the form of {translator:'', reference: '', extracted: '', flag: '', previous:''}
 	 *
-	 * @param {GetTextComment} comments A comments object
-	 * @return {String} A comment string for the PO file
+	 * @param comments A comments object
+	 * @return A comment string for the PO file
 	 */
 	_drawComments(comments: GetTextComment): string {
-		/** @type {String[]} lines */
 		const lines: string[] = [];
 		const types = [
 			{
@@ -102,12 +101,16 @@ class PoCompiler {
 		];
 
 		for (const type of types) {
-			if (!comments[type.key as keyof GetTextComment]) {
-				continue;
-			}
-
-			for (const line of comments[type.key].split(/\r?\n|\r/)) {
-				lines.push(`${type.prefix}${line}`);
+			const itemComments = type.key as keyof GetTextComment;
+			if (
+				itemComments in comments &&
+				typeof comments[itemComments] === "string"
+			) {
+				const commentsList = comments[itemComments]?.split(/\r?\n|\r/);
+				if (commentsList)
+					for (const line of commentsList) {
+						lines.push(`${type.prefix}${line}`);
+					}
 			}
 		}
 
@@ -117,22 +120,22 @@ class PoCompiler {
 	/**
 	 * Builds a PO string for a single translation object
 	 *
-	 * @param {GetTextTranslation} block Translation object
-	 * @param {GetTextTranslation} override Properties of this object will override `block` properties
+	 * @param {TranslationEntry} block Translation object
+	 * @param {TranslationEntry} override Properties of this object will override `block` properties
 	 * @param {boolean} [obsolete] Block is obsolete and must be commented out
 	 * @return {String} Translation string for a single object
 	 */
 	_drawBlock(
-		block: GetTextTranslation,
-		override: Partial<GetTextTranslation> = {},
+		block: TranslationEntry,
+		override: Partial<TranslationEntry> = {},
 		obsolete = false,
 	): string {
 		const response = [];
 		const msgctxt = override.msgctxt || block.msgctxt;
 		const msgid = override.msgid || block.msgid;
 		const msgidPlural = override.msgid_plural || block.msgid_plural;
-		/** @var {string[]} msgstr - Array of translation strings */
-		const msgstr = [].concat(override.msgstr || block.msgstr);
+		const realMsgstr: string[] = override.msgstr || block.msgstr;
+		const msgstr = [].concat(realMsgstr as never[]);
 		const comments = override.comments || block.comments;
 
 		// add comments
@@ -226,9 +229,16 @@ class PoCompiler {
 	 * Handles header values, replaces or adds (if needed) a charset property
 	 */
 	_handleCharset() {
+		if (!this._table.headers) {
+			this._table.headers = {};
+		}
 		const ct = contentType.parse(
 			this._table.headers["Content-Type"] || "text/plain",
 		);
+
+		if (!ct) {
+			return;
+		}
 
 		const charset = formatCharset(
 			this._table.charset || ct.parameters.charset || "utf-8",
@@ -247,13 +257,13 @@ class PoCompiler {
 	/**
 	 * Flatten and sort translations object
 	 *
-	 * @param {{[msgctxt: string]: { [msgid: string]: GetTextTranslation }}} section Object to be prepared (translations or obsolete)
-	 * @returns {GetTextTranslation[]} Prepared array
+	 * @param {{[msgctxt: string]: { [msgid: string]: TranslationEntry }}} section Object to be prepared (translations or obsolete)
+	 * @returns {TranslationEntry[]} Prepared array
 	 */
 	_prepareSection(section: {
-		[msgctxt: string]: { [msgid: string]: GetTextTranslation };
-	}): GetTextTranslation[] | undefined {
-		let response: GetTextTranslation[] = [];
+		[msgctxt: string]: { [msgid: string]: TranslationEntry };
+	}): TranslationEntry[] | undefined {
+		let response: TranslationEntry[] = [];
 
 		for (const msgctxt in section) {
 			if (typeof section[msgctxt] !== "object") {
@@ -312,7 +322,7 @@ class PoCompiler {
 		// TODO SOME GLITCHES HERE
 		response.unshift(
 			this._drawBlock(headerBlock, {
-				msgstr: generateHeader(this._table.headers),
+				msgstr: [generateHeader(this._table.headers)],
 			}),
 		);
 

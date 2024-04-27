@@ -1,13 +1,8 @@
 {
-	"name": "gettext-parser",
-	"description": "Parse and compile gettext po and mo files to/from json, nothing more, nothing less",
-	"version": "8.0.0",
-	"author": "Andris Reinman",
-	"contributors": [
-		{
-			"name": "Sam Hauglustaine"
-		}
-	],
+	"name": "gettext-parser-next",
+	"description": "Gettext parser fork, with modern js and types, this library is used to parse and compile gettext po and mo files to/from json",
+	"version": "1.0.0",
+	"author": "erikyo <https://github.com/erikyo>",
 	"homepage": "http://github.com/smhg/gettext-parser",
 	"repository": {
 		"type": "git",
@@ -19,7 +14,9 @@
 	},
 	"scripts": {
 		"lint": "npx @biomejs/biome check --apply src test",
-		"test": "vitest --coverage",
+		"test": "vitest",
+		"test:watch": "vitest --watch",
+		"test:coverage": "vitest --coverage",
 		"build": "node build.mjs && npm run types",
 		"watch": "npx esbuild ./src/index.ts --bundle --outfile=lib/esm/index.js --watch",
 		"types": "tsc --emitDeclarationOnly"
@@ -42,11 +39,5 @@
 		"typescript": "^5.4.4",
 		"vitest": "^1.5.2"
 	},
-	"keywords": [
-		"i18n",
-		"l10n",
-		"gettext",
-		"mo",
-		"po"
-	]
+	"keywords": ["i18n", "l10n", "gettext", "mo", "po"]
 }

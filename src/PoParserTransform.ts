@@ -1,47 +1,32 @@
-import type { TransformOptions } from "node:stream";
 import { Transform } from "node:stream";
 import PoParser from "./PoParser.js";
-import type { GetTextTranslationRaw, poParserOptions } from "./types.js";
+import type { PoParserTransformOptions, poParserOptions } from "./types.js";
 
 class PoParserTransform extends Transform {
+	_cache: Buffer[];
 	private _cacheSize: number;
-	private _parser: PoParser | false;
-	options: poParserOptions | undefined;
+	_parser: PoParser | false;
+	options: poParserOptions;
 	initialTreshold: number;
-	_tokens: Partial<GetTextTranslationRaw>;
 
 	constructor(
-		options: poParserOptions | undefined,
-		transformOptions: TransformOptions,
+		options: poParserOptions,
+		transformOptions: PoParserTransformOptions,
 	) {
 		super();
-		this.options = options;
+		this.options = options || {};
 		this._parser = false;
-		this._tokens = {};
-
 		this._cache = [];
 		this._cacheSize = 0;
-
 		this.initialTreshold = transformOptions.initialTreshold || 2 * 1024;
-
-		Transform.call(this, transformOptions);
-		this._writableState.objectMode = false;
-		this._readableState.objectMode = true;
 	}
 
-	/**
-	 * Processes a chunk of the input stream
-	 * @param {string} chunk
-	 * @param {string=} encoding
-	 * @param {() => void=} done
-	 */
 	_transform(
-		chunk: string | Buffer,
+		chunkRaw: string | Buffer,
 		encoding: string | undefined,
-		done: () => void,
+		done: (error?: Error | null) => void,
 	) {
-		let i: number;
-		let len = 0;
+		let chunk = chunkRaw as Buffer;
 
 		if (!chunk || !chunk.length) {
 			return done();
@@ -51,19 +36,18 @@ class PoParserTransform extends Transform {
 			this._cache.push(chunk);
 			this._cacheSize += chunk.length;
 
-			// wait until the first 1kb before parsing headers for charset
 			if (this._cacheSize < this.initialTreshold) {
 				return setImmediate(done);
 			}
-			if (this._cacheSize) {
-				chunk = Buffer.concat(this._cache, this._cacheSize);
-				this._cacheSize = 0;
-				this._cache = [];
-			}
+
+			// Concatenate cached chunks for parsing
+			chunk = Buffer.concat(this._cache, this._cacheSize);
+			this._cacheSize = 0;
+			this._cache = [];
 
 			this._parser = new PoParser(chunk, this.options);
 		} else if (this._cacheSize) {
-			// this only happens if we had an uncompleted 8bit sequence from the last iteration
+			// Concatenate new chunk with cached data
 			this._cache.push(chunk);
 			this._cacheSize += chunk.length;
 			chunk = Buffer.concat(this._cache, this._cacheSize);
@@ -71,63 +55,29 @@ class PoParserTransform extends Transform {
 			this._cache = [];
 		}
 
-		// cache 8bit bytes from the end of the chunk
-		// helps if the chunk ends in the middle of an utf-8 sequence
-		for (i = chunk.length - 1; i >= 0; i--) {
-			if (chunk[i] >= 0x80) {
-				len++;
-				continue;
-			}
-			break;
-		}
-		// it seems we found some 8bit bytes from the end of the string, so let's cache these
-		if (len) {
-			this._cache = [chunk.prototype.slice(chunk.length - len)];
-			this._cacheSize = this._cache[0].length;
-			chunk = chunk.prototype.slice(0, chunk.length - len);
-		}
-
-		// chunk might be empty if it only continued of 8bit bytes and these were all cached
-		if (chunk.length) {
-			try {
-				this._parser._lexer(this._parser._toString(chunk));
-			} catch (error) {
-				setImmediate(() => {
-					done(error);
-				});
-
-				return;
-			}
+		try {
+			this._parser._lexer(this._parser._toString(chunk));
+		} catch (error) {
+			setImmediate(() => {
+				done(error as Error);
+			});
+			return;
 		}
 
 		setImmediate(done);
 	}
 
-	// TODO: check if this is really needed or if it can be removed
-	/**
-	 * Once all input has been processed emit the parsed translation table as an object
-	 * @param {() => void} done The callback
-	 */
 	_flush(done: () => void) {
-		let chunk: Buffer | undefined;
-
+		// Handle any remaining cached data during flushing
 		if (this._cacheSize) {
-			chunk = Buffer.concat(this._cache, this._cacheSize);
-		}
+			const chunk = Buffer.concat(this._cache, this._cacheSize);
+			this._cacheSize = 0;
+			this._cache = [];
 
-		if (!this._parser && chunk) {
-			this._parser = new PoParser(chunk, this.options);
-		}
-
-		if (chunk) {
-			try {
+			if (!this._parser) {
+				this._parser = new PoParser(chunk, this.options);
+			} else {
 				this._parser._lexer(this._parser._toString(chunk));
-			} catch (error) {
-				setImmediate(() => {
-					done(error);
-				});
-
-				return;
 			}
 		}
 
@@ -136,10 +86,6 @@ class PoParserTransform extends Transform {
 		}
 
 		setImmediate(done);
-	}
-
-	private _cache(_cache: string | Buffer, _cacheSize: number): void {
-		throw new Error("Method not implemented.");
 	}
 }
 

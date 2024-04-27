@@ -9,8 +9,8 @@ import type { GetTextTranslations } from "./types.js";
  * @return {Object} Translation object
  */
 function parseMo(
-	buffer: Buffer | string,
-	defaultCharset: string,
+	buffer: Buffer,
+	defaultCharset?: string,
 ): GetTextTranslations | false {
 	const parser = new MoParser(buffer, defaultCharset);
 
