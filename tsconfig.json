@@ -2,7 +2,8 @@
 	"compilerOptions": {
 		"noImplicitAny": true,
 		"removeComments": false,
-		"moduleResolution": "node",
+		"moduleResolution": "node16",
+		"module": "Node16",
 		"target": "ES2022",
 		"strict": true,
 		"rootDir": "src",
@@ -12,7 +13,7 @@
 		"emitDeclarationOnly": true,
 		"pretty": false,
 		"skipLibCheck": true,
-      "allowSyntheticDefaultImports": true
-    },
+		"allowSyntheticDefaultImports": true
+	},
 	"include": ["src/**/*.ts"]
 }

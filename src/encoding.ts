@@ -3,21 +3,21 @@ import { decode, encode } from "iconv-lite";
 /**
  * Convert encoding of an UTF-8 string or a buffer
  *
- * @param {String|Buffer} str String to be converted
- * @param {String} to Encoding to be converted to
- * @param {String} [from='UTF-8'] Encoding to be converted from
+ * @param {String|Buffer} strRaw String to be converted
+ * @param {String} toRaw Encoding to be converted to
+ * @param {String} [fromRaw='UTF-8'] Encoding to be converted from
  * @return {Buffer} Encoded string
  */
 export default function convert(
-	str: string | Buffer,
-	to: string,
-	from: string,
+	strRaw: string | Buffer,
+	toRaw: string,
+	fromRaw?: string,
 ): Buffer {
-	from = checkEncoding(from || "UTF-8");
-	to = checkEncoding(to || "UTF-8");
-	str = str || "";
+	const from = checkEncoding(fromRaw || "UTF-8");
+	const to = checkEncoding(toRaw || "UTF-8");
+	let str = strRaw || "";
 
-	var result;
+	let result: Buffer | string;
 
 	if (from !== "UTF-8" && typeof str === "string") {
 		str = Buffer.from(str, "binary");
@@ -53,14 +53,18 @@ export default function convert(
  * @param {String} [from='UTF-8'] Encoding to be converted from
  * @return {Buffer} Encoded string
  */
-export function convertIconvLite(str, to, from) {
+export function convertIconvLite(
+	str: Buffer | string,
+	to: string,
+	from: string,
+): string | Buffer {
 	if (to === "UTF-8") {
-		return decode(str, from);
+		return decode(str as Buffer, from);
 	}
-	if (from === "UTF-8") {
+	if (from === "UTF-8" && typeof str === "string") {
 		return encode(str, to);
 	}
-	return encode(decode(str, from), to);
+	return encode(decode(str as Buffer, from), to);
 }
 
 /**

@@ -1,13 +1,11 @@
-// see https://www.gnu.org/software/gettext/manual/html_node/Header-Entry.html
+const PLURAL_FORMS: string = "Plural-Forms";
 
-/** @type {string} The name of the plural form header key */
-const PLURAL_FORMS = "Plural-Forms";
-
+type Headers = Map<string, string>;
+type Header = { [key: string]: string };
 /**
  * The header keys and their corresponding values
- * @type {Map<string, string>}
  */
-export const HEADERS: Map<string, string> = new Map([
+export const HEADERS: Headers = new Map([
 	["project-id-version", "Project-Id-Version"],
 	["report-msgid-bugs-to", "Report-Msgid-Bugs-To"],
 	["pot-creation-date", "POT-Creation-Date"],
@@ -22,12 +20,9 @@ export const HEADERS: Map<string, string> = new Map([
 
 /**
  * The regex for parsing 'nplurals" value from "Plural-Forms" header
- *
- * @type {RegExp} regex for parsing 'nplurals" value
  */
-const PLURAL_FORM_HEADER_NPLURALS_REGEX = /nplurals\s*=\s*(?<nplurals>\d+)/;
-
-/** @typedef {Record<string, string>} Headers Header keys and their corresponding values */
+const PLURAL_FORM_HEADER_NPLURALS_REGEX: RegExp =
+	/nplurals\s*=\s*(?<nplurals>\d+)/;
 
 /**
  * Parses a header string into an object of key-value pairs
@@ -35,41 +30,34 @@ const PLURAL_FORM_HEADER_NPLURALS_REGEX = /nplurals\s*=\s*(?<nplurals>\d+)/;
  * @param {String} str Header string
  * @return {{[headerName: string]: string}} An object of key-value pairs
  */
-export function parseHeader(str = "") {
-	return str.split("\n").reduce(
-		/**
-		 * @param {Headers} headers Array of headers
-		 * @param {string} line Current line
-		 */
-		(headers: { [key: string]: string }, line: string) => {
-			const parts = line.split(":");
-			let key = (parts.shift() || "").trim();
+export function parseHeader(str = ""): Header {
+	return str.split("\n").reduce((headers: Header, line: string) => {
+		const parts = line.split(":");
+		let key = (parts.shift() || "").trim();
 
-			if (key) {
-				const value = parts.join(":").trim();
+		if (key) {
+			const value = parts.join(":").trim();
 
-				key = HEADERS.get(key.toLowerCase()) || key;
+			key = HEADERS.get(key.toLowerCase()) || key;
 
-				headers[key] = value;
-			}
+			headers[key] = value;
+		}
 
-			return headers;
-		},
-		{},
-	);
+		return headers;
+	}, {});
 }
 
 /**
  * Attempts to safely parse 'nplurals" value from "Plural-Forms" header
  *
- * @param {Headers} headers An object with parsed headers
- * @param fallback {Number} Fallback value
+ * @param headers An object with parsed headers
+ * @param fallback the fallback value
  * @returns {number} Parsed result
  */
 export function parseNPluralFromHeadersSafely(
-	headers: { [key: string]: string },
+	headers: Header,
 	fallback = 1,
-) {
+): number {
 	const pluralForms = headers ? headers[PLURAL_FORMS] : false;
 
 	if (!pluralForms) {
@@ -89,7 +77,7 @@ export function parseNPluralFromHeadersSafely(
  * @param {Headers} header Object of key value pairs
  * @return {String} Header string
  */
-export function generateHeader(header: { [key: string]: string } = {}): string {
+export function generateHeader(header: Header = {}): string {
 	const keys = Object.keys(header).filter((key) => !!key);
 
 	if (!keys.length) {
@@ -104,14 +92,14 @@ export function generateHeader(header: { [key: string]: string } = {}): string {
 /**
  * Normalizes charset name. Converts utf8 to utf-8, WIN1257 to windows-1257 etc.
  *
- * @param {String} charset Charset name
- * @param {String} defaultCharset Default charset (default: 'iso-8859-1')
+ * @param charset Charset name
+ * @param defaultCharset Default charset (default: 'iso-8859-1')
  * @return {String} Normalized charset name
  */
 export function formatCharset(
 	charset = "iso-8859-1",
 	defaultCharset = "iso-8859-1",
-) {
+): string {
 	return charset
 		.toString()
 		.toLowerCase()
@@ -126,19 +114,19 @@ export function formatCharset(
 /**
  * Folds long lines according to PO format
  *
- * @param {String} str PO formatted string to be folded
- * @param {Number} [maxLen=76] Maximum allowed length for folded lines
+ * @param str PO formatted string to be folded
+ * @param [maxLen=76] Maximum allowed length for folded lines
  * @return {string[]} An array of lines
  */
-export function foldLine(str: string, maxLen = 76) {
+export function foldLine(str: string, maxLen = 76): string[] {
 	const lines = [];
 	const len = str.length;
 	let curLine = "";
 	let pos = 0;
-	let match: RegExpMatchArray | null;
+	let match: RegExpExecArray | null;
 
 	while (pos < len) {
-		curLine = str.substring(pos, maxLen);
+		curLine = str.substring(pos, pos + maxLen);
 
 		// ensure that the line never ends with a partial escaping
 		// make longer lines if needed
@@ -153,15 +141,11 @@ export function foldLine(str: string, maxLen = 76) {
 			curLine = match[0];
 		} else if (pos + curLine.length < len) {
 			// if we're not at the end
-			match = /.*\s+/.exec(curLine);
-			if (match && /[^\s]/.test(match[0])) {
-				// use everything before and including the last white space character (if anything)
-				curLine = match[0];
-			} else if (
-				(match = /.*[\x21-\x2f0-9\x5b-\x60\x7b-\x7e]+/.exec(curLine)) &&
-				/[^\x21-\x2f0-9\x5b-\x60\x7b-\x7e]/.test(match[0])
-			) {
-				// use everything before and including the last "special" character (if anything)
+			match =
+				/.*\s+/.exec(curLine) ||
+				/.*[\x21-\x2f0-9\x5b-\x60\x7b-\x7e]+/.exec(curLine);
+			if (match && /[^\s\x21-\x2f0-9\x5b-\x60\x7b-\x7e]/.test(match[0])) {
+				// use everything before and including the last white space character or special character (if anything)
 				curLine = match[0];
 			}
 		}
@@ -176,8 +160,8 @@ export function foldLine(str: string, maxLen = 76) {
 /**
  * Comparator function for comparing msgid
  *
- * @param {{msgid: string}} left with msgid prev
- * @param {{msgid: string}} right with msgid next
+ * @param left with msgid prev
+ * @param right with msgid next
  * @returns {number} comparator index
  */
 export function compareMsgid(

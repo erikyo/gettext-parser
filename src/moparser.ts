@@ -1,65 +1,62 @@
-import type { Buffer } from "safe-buffer";
-import encoding from "./encoding.js";
+import convert from "./encoding.js";
 import { formatCharset, parseHeader } from "./shared.js";
-import type { GetTextTranslations } from "./types";
+import type { GetTextTranslations } from "./types.js";
 
 /**
  * Parses a binary MO object into translation table
  *
- * @param {string | Buffer} buffer Binary MO object
+ * @param {Buffer} buffer Binary MO object
  * @param {String} [defaultCharset] Default charset to use
  * @return {Object} Translation object
  */
-export default function (
-	buffer: string | Buffer,
-	defaultCharset = "iso-8859-1",
-) {
+export default function (buffer: Buffer, defaultCharset: string) {
 	const parser = new Parser(buffer, defaultCharset);
 
 	return parser.parse();
 }
 
 /**
- * Translation table
- * The translation table is an object with the following structure:
- *
- * - charset: (string|String|*)
- * - headers?: {[headerName: string]: string}
- * - translations: {
- *   [msgctxt: string]: { [msgId: string]: GetTextTranslation }
- *   }
- *
- * @typedef {{charset: (string|String|*), headers?: {[headerName: string]: string}, translations: import('../index.d.ts').GetTextTranslations | {}}} Table
- */
-
-/**
  * Creates a MO parser object.
- * @constructor
- * @this {Parser}
  *
+ * @constructor
  * @param {Buffer} fileContents Binary MO object
  * @param {String} [defaultCharset] Default charset to use
  */
 class Parser {
-	private _fileContents: any;
+	private _fileContents: string | Buffer;
 	private _writeFunc: string;
 	private _readFunc: string;
 	private _charset: string;
-	private _table: GetTextTranslations;
+	private _table: {
+		charset: string;
+		headers: undefined;
+		translations: GetTextTranslations;
+	};
+	MAGIC: number;
 	constructor(fileContents: string | Buffer, defaultCharset = "iso-8859-1") {
 		this._fileContents = fileContents;
 
+		/**
+		 * Method name for writing int32 values, default littleendian
+		 */
 		this._writeFunc = "writeUInt32LE";
 
+		/**
+		 * Method name for reading int32 values, default littleendian
+		 */
 		this._readFunc = "readUInt32LE";
 
 		this._charset = defaultCharset;
 
 		this._table = {
 			charset: this._charset,
-			headers: {},
+			headers: undefined,
 			translations: {},
 		};
+		/**
+		 * Magic constant to check the endianness of the input file
+		 */
+		this.MAGIC = 0x950412de;
 	}
 
 	/**
@@ -115,10 +112,8 @@ class Parser {
 				this._handleCharset(msgstr);
 			}
 
-			msgid = encoding.convert(msgid, "utf-8", this._charset).toString("utf8");
-			msgstr = encoding
-				.convert(msgstr, "utf-8", this._charset)
-				.toString("utf8");
+			msgid = convert(msgid, "utf-8", this._charset).toString("utf8");
+			msgstr = convert(msgstr, "utf-8", this._charset).toString("utf8");
 
 			this._addString(msgid, msgstr);
 		}
@@ -126,7 +121,6 @@ class Parser {
 		// dump the file contents object
 		this._fileContents = null;
 	}
-
 	/**
 	 * Detects charset for MO strings from the header
 	 *
@@ -143,53 +137,43 @@ class Parser {
 			);
 		}
 
-		headers = encoding
-			.convert(headers, "utf-8", this._charset)
-			.toString("utf8");
+		headers = convert(headers, "utf-8", this._charset).toString("utf8");
 
-		this._table.headers = parseHeader(headers.toString());
+		this._table.headers = parseHeader(headers);
 	}
 
 	/**
 	 * Adds a translation to the translation object
 	 *
-	 * @param {string} msgid Original string
+	 * @param {String} msgidRaw Original string
 	 * @param {String} msgstr Translation for the original string
 	 */
-	_addString(msgid, msgstr) {
-		/**
-		 * @type {import('../index.d.ts').GetTextTranslation} translation Translation
-		 */
+	_addString(msgidRaw: string | Buffer, msgstr: string) {
 		const translation = {};
-		/** @var {string} msgctxt Context string */
 		let msgctxt;
-		/** @var {string} msgidPlural Plural translation string */
 		let msgidPlural;
+		let msgid = msgidRaw;
 
-		const msgidSplit = msgid.split("\u0004");
-		if (msgidSplit.length > 1) {
-			msgctxt = msgidSplit.shift();
+		msgid = msgid.split("\u0004");
+		if (msgid.length > 1) {
+			msgctxt = msgid.shift();
 			translation.msgctxt = msgctxt;
 		} else {
 			msgctxt = "";
 		}
-		msgid = msgidSplit.join("\u0004");
+		msgid = msgid.join("\u0004");
 
 		const parts = msgid.split("\u0000");
-		msgid = parts.shift() || "";
+		msgid = parts.shift();
 
 		translation.msgid = msgid;
 
-		// Plural forms
-		msgidPlural = parts.join("\u0000");
-
-		if (msgidPlural) {
+		if ((msgidPlural = parts.join("\u0000"))) {
 			translation.msgid_plural = msgidPlural;
 		}
 
-		/** @var {string[]} msgstr Translated string */
-		const msgstrSplit = msgstr.split("\u0000");
-		translation.msgstr = [].concat(msgstrSplit);
+		msgstr = msgstr.split("\u0000");
+		translation.msgstr = [].concat(msgstr || []);
 
 		if (!this._table.translations[msgctxt]) {
 			this._table.translations[msgctxt] = {};
@@ -201,7 +185,7 @@ class Parser {
 	/**
 	 * Parses the MO object and returns translation table
 	 *
-	 * @return {import('../index.d.ts').GetTextTranslations | false} Translation table
+	 * @return {Object} Translation table
 	 */
 	parse() {
 		if (!this._checkMagick()) {
@@ -234,8 +218,3 @@ class Parser {
 		return this._table;
 	}
 }
-
-/**
- * Magic constant to check the endianness of the input file
- */
-Parser.prototype.MAGIC = 0x950412de;

@@ -17,11 +17,12 @@ export interface GetTextTranslation {
 }
 
 export interface GetTextTranslationRaw extends GetTextTranslation {
-	value: string;
+	value: string | { [key: string]: string };
 	type: number;
 	key: string;
 	obsolete?: boolean;
 	lastNode?: boolean;
+	quote?: string;
 }
 
 export interface GetTextTranslations {
@@ -41,8 +42,8 @@ export interface parserOptions {
 	eol?: string;
 	defaultCharset?: string;
 	validation?: boolean;
-	foldLength?: string;
-	escapeCharacters?: string;
+	foldLength?: number;
+	escapeCharacters?: boolean;
 	sort?: boolean;
 }
 
