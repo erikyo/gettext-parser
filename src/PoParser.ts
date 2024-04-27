@@ -1,71 +1,25 @@
-import { type Readable, TransformOptions } from "node:stream";
-import util from "util";
-import encoding from "encoding";
-import type { Options } from "iconv-lite";
-import { Transform, type TransformOptions } from "readable-stream";
+import convert from "./encoding.js";
 import {
 	formatCharset,
 	parseHeader,
 	parseNPluralFromHeadersSafely,
 } from "./shared.js";
-import type {
-	GetTextComment,
+import {
+	type GetTextComment,
 	GetTextTranslation,
-	GetTextTranslationRaw,
-	GetTextTranslations,
-	gettextTranslation,
-	parserOptions,
+	type GetTextTranslationRaw,
+	type GetTextTranslations,
+	type LexerError,
+	type PoNode,
+	type State,
+	type gettextTranslation,
+	type parserOptions,
 } from "./types.js";
-
-interface State {
-	none?: number;
-	comments: number;
-	key: number;
-	string: number;
-	obsolete: number;
-}
-
-interface LexerError extends SyntaxError {
-	lineNumber: number;
-}
-
-/**
- * The PO parser options
- */
-interface Options {
-	defaultCharset?: string;
-	validation?: boolean;
-}
-
-/**
- * Parses a PO object into translation table
- *
- * @param {string | Buffer} input PO object
- * @param {Options} [options] Optional options with defaultCharset and validation
- */
-export function parse(input: string | Buffer | undefined, options = {}) {
-	const parser = new PoParser(input, options);
-
-	return parser.parse();
-}
-
-/**
- * Parses a PO stream, emits translation table in object mode
- *
- * @param {Options} [options] Optional options with defaultCharset and validation
- * @param {TransformOptions} [transformOptions] Optional stream options
- */
-export function stream(
-	options: Options = {},
-	transformOptions: TransformOptions = {},
-) {
-	return new PoParserTransform(options, transformOptions);
-}
 
 class PoParser {
 	private _charset: string;
 	private _escaped: boolean;
-	private _node: Partial<GetTextTranslationRaw>;
+	private _node: PoNode;
 	private _state: number | undefined;
 	_validation: boolean;
 	states: State;
@@ -82,8 +36,8 @@ class PoParser {
 	_fileContents: string;
 
 	constructor(
-		fileContents: string | Buffer | undefined,
-		{ defaultCharset = "iso-8859-1", validation = false }: parserOptions = {},
+		fileContents: string | Buffer,
+		{ defaultCharset = "iso-8859-1", validation = false }: parserOptions,
 	) {
 		this._validation = validation;
 		this._charset = defaultCharset;
@@ -120,8 +74,7 @@ class PoParser {
 
 		this._lex = [];
 		this._escaped = false;
-		/** @property {PoNode} node The lexer node */
-		this._node = {};
+		this._node = {} as PoNode;
 		this._state = this.states.none;
 		this._lineNumber = 1;
 
@@ -138,7 +91,7 @@ class PoParser {
 	 *
 	 * @return {Object} Translation table
 	 */
-	parse() {
+	parse(): GetTextTranslations {
 		this._lexer(this._fileContents);
 
 		return this._finalize(this._lex);
@@ -149,20 +102,19 @@ class PoParser {
 	 *
 	 * @param buf PO string buffer to be parsed
 	 */
-	_handleCharset(buf?: undefined | Buffer) {
+	_handleCharset(buf: Buffer) {
 		const str = buf.toString();
-		let pos;
 		let headers = "";
-		let match;
-
-		if ((pos = str.search(/^\s*msgid/im)) >= 0) {
+		let pos = str.search(/^\s*msgid/im);
+		if (pos >= 0) {
 			pos = pos + str.substring(pos + 5).search(/^\s*(msgid|msgctxt)/im);
 			headers = str.substring(0, pos >= 0 ? pos + 5 : str.length);
 		}
 
-		if (
-			(match = headers.match(/[; ]charset\s*=\s*([\w-]+)(?:[\s;]|\\n)*"\s*$/im))
-		) {
+		const match = headers.match(
+			/[; ]charset\s*=\s*([\w-]+)(?:[\s;]|\\n)*"\s*$/im,
+		);
+		if (match) {
 			this._charset = formatCharset(match[1], this._charset);
 		}
 
@@ -179,7 +131,7 @@ class PoParser {
 	 * @return {string} the string res
 	 */
 	_toString(buf: Buffer) {
-		return encoding.convert(buf, "utf-8", this._charset).toString("utf-8");
+		return convert(buf, "utf-8", this._charset).toString("utf-8");
 	}
 
 	/**
@@ -302,7 +254,7 @@ class PoParser {
 				tokens[i].type === this.types.string &&
 				lastNode.type === this.types.string
 			) {
-				lastNode.value += tokens[i].value;
+				lastNode.value += tokens[i].value as string;
 			} else if (
 				lastNode &&
 				tokens[i].type === this.types.comments &&
@@ -340,7 +292,7 @@ class PoParser {
 				previous: [],
 			};
 
-			const lines: string[] = (node.value || "").split(/\n/);
+			const lines: string[] = ((node.value as string) || "").split(/\n/);
 
 			for (const line of lines) {
 				switch (line.charAt(0) || "") {
@@ -381,12 +333,7 @@ class PoParser {
 	 */
 	_handleKeys(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
 		const response = [];
-		let lastNode: {
-			key: string;
-			value?: string;
-			obsolete?: boolean;
-			comments?: string;
-		} | null = null;
+		let lastNode: PoNode;
 
 		for (let i = 0, len = tokens.length; i < len; i++) {
 			if (tokens[i].type === this.types.key) {
@@ -415,10 +362,10 @@ class PoParser {
 	 * @param {GetTextTranslationRaw[]} tokens Parsed tokens
 	 * @return {Object} Tokens
 	 */
-	_handleValues(tokens: GetTextTranslationRaw[]) {
-		const response = [];
+	_handleValues(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
+		const response: GetTextTranslationRaw[] = [];
 		let lastNode: Partial<GetTextTranslationRaw> | null = null;
-		let curContext: string | false = false;
+		let curContext: string | { [key: string]: string } | false = false;
 		let curComments: GetTextComment | false = false;
 
 		for (let i = 0, len = tokens.length; i < len; i++) {
@@ -427,7 +374,7 @@ class PoParser {
 				curComments = tokens[i].comments || false;
 			} else if (tokens[i].key.toLowerCase() === "msgid") {
 				lastNode = {
-					msgid: tokens[i].value,
+					msgid: tokens[i].value as string,
 				};
 
 				if (tokens[i].obsolete) {
@@ -436,7 +383,7 @@ class PoParser {
 
 				if (curContext) {
 					// TODO: Check if this is the right way to do it
-					lastNode.msgctxt = curContext;
+					lastNode.msgctxt = curContext as string;
 				}
 
 				if (curComments) {
@@ -449,7 +396,7 @@ class PoParser {
 
 				curContext = false;
 				curComments = false;
-				response.push(lastNode);
+				response.push(lastNode as GetTextTranslationRaw);
 			} else if (tokens[i].key.toLowerCase() === "msgid_plural") {
 				if (lastNode) {
 					if (this._validation && "msgid_plural" in lastNode) {
@@ -460,22 +407,24 @@ class PoParser {
 						);
 					}
 
-					lastNode.msgid_plural = tokens[i].value;
+					lastNode.msgid_plural = tokens[i].value as string;
 				}
 
-				if (tokens[i].comments && !lastNode.comments) {
-					lastNode.comments = tokens[i].comments;
+				if (tokens[i].comments && !lastNode?.comments) {
+					lastNode.comments = tokens[i].comments as GetTextComment;
 				}
 
 				curContext = false;
 				curComments = false;
 			} else if (tokens[i].key.substr(0, 6).toLowerCase() === "msgstr") {
 				if (lastNode) {
-					lastNode.msgstr = (lastNode.msgstr || []).concat(tokens[i].value);
+					lastNode.msgstr = (lastNode.msgstr || []).concat(
+						tokens[i].value as string,
+					);
 				}
 
-				if (tokens[i].comments && !lastNode.comments) {
-					lastNode.comments = tokens[i].comments;
+				if (tokens[i].comments && lastNode && !lastNode?.comments) {
+					lastNode.comments = tokens[i].comments as GetTextComment;
 				}
 
 				curContext = false;
@@ -585,7 +534,7 @@ class PoParser {
 	 * @param {GetTextTranslationRaw[]} tokens Parsed tokens
 	 * @returns {GetTextTranslationRaw[]} Translation table
 	 */
-	_finalize(tokens: GetTextTranslationRaw[]): GetTextTranslationRaw[] {
+	_finalize(tokens: GetTextTranslationRaw[]): GetTextTranslations {
 		let data: GetTextTranslationRaw[] = this._joinStringValues(tokens);
 
 		this._parseComments(data);
@@ -597,142 +546,4 @@ class PoParser {
 	}
 }
 
-class PoParserTransform extends Transform {
-	private _cacheSize: number;
-	private _parser: PoParser | false;
-	options: parserOptions | undefined;
-	initialTreshold: number;
-	_tokens: Partial<GetTextTranslationRaw>;
-
-	constructor(
-		options: Options | undefined,
-		transformOptions: TransformOptions,
-	) {
-		super(transformOptions);
-		this.options = options;
-		this._parser = false;
-		this._tokens = {};
-
-		this._cache = [];
-		this._cacheSize = 0;
-
-		this.initialTreshold = transformOptions.initialTreshold || 2 * 1024;
-
-		Transform.call(this, transformOptions);
-		this._writableState.objectMode = false;
-		this._readableState.objectMode = true;
-	}
-
-	/**
-	 * Processes a chunk of the input stream
-	 * @param {string} chunk
-	 * @param {string=} encoding
-	 * @param {() => void=} done
-	 */
-	_transform(
-		chunk: string,
-		encoding: string | undefined,
-		done: (() => void) | undefined,
-	) {
-		let i: number;
-		let len = 0;
-
-		if (!chunk || !chunk.length) {
-			return done();
-		}
-
-		if (!this._parser) {
-			this._cache.push(chunk);
-			this._cacheSize += chunk.length;
-
-			// wait until the first 1kb before parsing headers for charset
-			if (this._cacheSize < this.initialTreshold) {
-				return setImmediate(done);
-			}
-			if (this._cacheSize) {
-				chunk = Buffer.concat(this._cache, this._cacheSize);
-				this._cacheSize = 0;
-				this._cache = [];
-			}
-
-			this._parser = new PoParser(chunk, this.options);
-		} else if (this._cacheSize) {
-			// this only happens if we had an uncompleted 8bit sequence from the last iteration
-			this._cache.push(chunk);
-			this._cacheSize += chunk.length;
-			chunk = Buffer.concat(this._cache, this._cacheSize);
-			this._cacheSize = 0;
-			this._cache = [];
-		}
-
-		// cache 8bit bytes from the end of the chunk
-		// helps if the chunk ends in the middle of an utf-8 sequence
-		for (i = chunk.length - 1; i >= 0; i--) {
-			if (chunk[i] >= 0x80) {
-				len++;
-				continue;
-			}
-			break;
-		}
-		// it seems we found some 8bit bytes from the end of the string, so let's cache these
-		if (len) {
-			this._cache = [chunk.prototype.slice(chunk.length - len)];
-			this._cacheSize = this._cache[0].length;
-			chunk = chunk.prototype.slice(0, chunk.length - len);
-		}
-
-		// chunk might be empty if it only continued of 8bit bytes and these were all cached
-		if (chunk.length) {
-			try {
-				this._parser._lexer(this._parser._toString(chunk));
-			} catch (error) {
-				setImmediate(() => {
-					done(error);
-				});
-
-				return;
-			}
-		}
-
-		setImmediate(done);
-	}
-
-	// TODO: check if this is really needed or if it can be removed
-	/**
-	 * Once all input has been processed emit the parsed translation table as an object
-	 * @param {() => void} done The callback
-	 */
-	_flush(done: () => void) {
-		let chunk;
-
-		if (this._cacheSize) {
-			chunk = Buffer.concat(this._cache, this._cacheSize);
-		}
-
-		if (!this._parser && chunk) {
-			this._parser = new PoParser(chunk, this.options);
-		}
-
-		if (chunk) {
-			try {
-				this._parser._lexer(this._parser._toString(chunk));
-			} catch (error) {
-				setImmediate(() => {
-					done(error);
-				});
-
-				return;
-			}
-		}
-
-		if (this._parser) {
-			this.push(this._parser._finalize(this._parser._lex));
-		}
-
-		setImmediate(done);
-	}
-
-	private _cache(_cache: string, _cacheSize: number): any {
-		throw new Error("Method not implemented.");
-	}
-}
+export default PoParser;

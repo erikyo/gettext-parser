@@ -1,19 +1,10 @@
 import convert from "./encoding.js";
 import { formatCharset, parseHeader } from "./shared.js";
-import type { GetTextTranslations } from "./types.js";
-
-/**
- * Parses a binary MO object into translation table
- *
- * @param {Buffer} buffer Binary MO object
- * @param {String} [defaultCharset] Default charset to use
- * @return {Object} Translation object
- */
-export default function (buffer: Buffer, defaultCharset: string) {
-	const parser = new Parser(buffer, defaultCharset);
-
-	return parser.parse();
-}
+import type {
+	BufferReadFunc,
+	BufferWriteFunc,
+	GetTextTranslations,
+} from "./types.js";
 
 /**
  * Creates a MO parser object.
@@ -22,17 +13,17 @@ export default function (buffer: Buffer, defaultCharset: string) {
  * @param {Buffer} fileContents Binary MO object
  * @param {String} [defaultCharset] Default charset to use
  */
-class Parser {
-	private _fileContents: string | Buffer;
-	private _writeFunc: string;
-	private _readFunc: string;
+export class MoParser {
+	private _fileContents: Buffer | string;
+	private _writeFunc: BufferWriteFunc;
+	private _readFunc: BufferReadFunc;
 	private _charset: string;
-	private _table: {
-		charset: string;
-		headers: undefined;
-		translations: GetTextTranslations;
-	};
+	private _table: GetTextTranslations;
 	MAGIC: number;
+	_offsetOriginals?: number;
+	_offsetTranslations?: number;
+	private _revision: any;
+	private _total: any;
 	constructor(fileContents: string | Buffer, defaultCharset = "iso-8859-1") {
 		this._fileContents = fileContents;
 
@@ -65,13 +56,19 @@ class Parser {
 	 * @return {Boolean} Return true if magic was detected
 	 */
 	_checkMagick() {
-		if (this._fileContents.readUInt32LE(0) === this.MAGIC) {
+		if (
+			typeof this._fileContents !== "string" &&
+			this._fileContents.readUInt32LE(0) === this.MAGIC
+		) {
 			this._readFunc = "readUInt32LE";
 			this._writeFunc = "writeUInt32LE";
 
 			return true;
 		}
-		if (this._fileContents.readUInt32BE(0) === this.MAGIC) {
+		if (
+			typeof this._fileContents !== "string" &&
+			this._fileContents.readUInt32BE(0) === this.MAGIC
+		) {
 			this._readFunc = "readUInt32BE";
 			this._writeFunc = "writeUInt32BE";
 
@@ -86,12 +83,10 @@ class Parser {
 	 * first translation string in the file as the header.
 	 */
 	_loadTranslationTable() {
-		let offsetOriginals = this._offsetOriginals;
-		let offsetTranslations = this._offsetTranslations;
-		let position;
-		let length;
-		let msgid;
-		let msgstr;
+		let offsetOriginals = this._offsetOriginals as number;
+		let offsetTranslations = this._offsetTranslations as number;
+		let position: number;
+		let length: number;
 
 		for (let i = 0; i < this._total; i++) {
 			// msgid string
@@ -99,45 +94,53 @@ class Parser {
 			offsetOriginals += 4;
 			position = this._fileContents[this._readFunc](offsetOriginals);
 			offsetOriginals += 4;
-			msgid = this._fileContents.slice(position, position + length);
+			const msgidBuffer = this._fileContents.subarray(
+				position,
+				position + length,
+			);
+			const msgid = convert(msgidBuffer, "utf-8", this._charset).toString(
+				"utf8",
+			);
 
 			// matching msgstr
 			length = this._fileContents[this._readFunc](offsetTranslations);
 			offsetTranslations += 4;
 			position = this._fileContents[this._readFunc](offsetTranslations);
 			offsetTranslations += 4;
-			msgstr = this._fileContents.slice(position, position + length);
+			const msgstrBuffer = this._fileContents.subarray(
+				position,
+				position + length,
+			);
+			const msgstr = convert(msgstrBuffer, "utf-8", this._charset).toString(
+				"utf8",
+			);
 
-			if (!i && !msgid.toString()) {
-				this._handleCharset(msgstr);
+			if (!i && !msgid) {
+				this._handleCharset(msgstrBuffer); // Assuming _handleCharset can take a Buffer
 			}
-
-			msgid = convert(msgid, "utf-8", this._charset).toString("utf8");
-			msgstr = convert(msgstr, "utf-8", this._charset).toString("utf8");
 
 			this._addString(msgid, msgstr);
 		}
-
-		// dump the file contents object
-		this._fileContents = null;
 	}
 	/**
 	 * Detects charset for MO strings from the header
 	 *
-	 * @param {Buffer} headers Header value
+	 * @param {Buffer} headersRaw Header value
 	 */
-	_handleCharset(headers) {
-		const headersStr = headers.toString();
-		let match;
+	_handleCharset(headersRaw: Buffer) {
+		const headersStr = headersRaw.toString();
 
-		if ((match = headersStr.match(/[; ]charset\s*=\s*([\w-]+)/i))) {
+		const match = headersStr.match(/[; ]charset\s*=\s*([\w-]+)/i);
+		if (match) {
 			this._charset = this._table.charset = formatCharset(
 				match[1],
 				this._charset,
 			);
 		}
 
-		headers = convert(headers, "utf-8", this._charset).toString("utf8");
+		const headers = convert(headersRaw, "utf-8", this._charset).toString(
+			"utf8",
+		);
 
 		this._table.headers = parseHeader(headers);
 	}
@@ -185,9 +188,9 @@ class Parser {
 	/**
 	 * Parses the MO object and returns translation table
 	 *
-	 * @return {Object} Translation table
+	 * @return {GetTextTranslations} Translation table
 	 */
-	parse() {
+	parse(): GetTextTranslations | false {
 		if (!this._checkMagick()) {
 			return false;
 		}

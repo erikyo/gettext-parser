@@ -1,50 +1,55 @@
-import moCompiler from "./mocompiler.js";
-import moParser from "./moparser.js";
-import poCompiler from "./pocompiler.js";
-import * as poParser from "./poparser.js";
+import CompilePo from "./compilePo.js";
 
-import type { Transform } from "node:stream";
+import type { Transform, TransformOptions } from "node:stream";
+import type {
+	GetTextTranslations,
+	parserOptions,
+	poParserOptions,
+} from "./types.js";
 
-import type { Buffer } from "safe-buffer";
-import type { GetTextTranslations, parserOptions } from "./types.js";
-
-export interface po {
-	parse: (
-		buffer: Buffer | string,
-		defaultCharset?: string,
-	) => GetTextTranslations;
-	compile: (table: GetTextTranslations, options?: parserOptions) => Buffer;
-	createParseStream: (
-		options?: parserOptions,
-		transformOptions?: import("readable-stream").TransformOptions,
-	) => Transform;
-}
+import moCompiler from "./compileMo.js";
+import moParser from "./parseMo.js";
+import parsePo from "./parsePo.js";
+import StreamPo from "./streamPo.js";
 
 /**
  * Translation parser and compiler for PO files
  * @see https://www.gnu.org/software/gettext/manual/html_node/PO.html
  */
-export const po: po = {
-	parse: poParser.parse,
-	createParseStream: poParser.stream,
-	compile: poCompiler,
-};
-
-export interface mo {
+export const po: {
 	parse: (
 		buffer: Buffer | string,
-		defaultCharset?: string,
+		options?: poParserOptions,
 	) => GetTextTranslations;
-	compile: (table: GetTextTranslations, options?: parserOptions) => Buffer;
-}
+	compile: (
+		table: GetTextTranslations,
+		options?: parserOptions,
+	) => string | Buffer;
+	createParseStream: (
+		options?: parserOptions,
+		transformOptions?: TransformOptions,
+	) => Transform;
+} = {
+	parse: parsePo,
+	createParseStream: StreamPo,
+	compile: CompilePo,
+};
 
 /**
  * Translation parser and compiler for PO files
  * @see https://www.gnu.org/software/gettext/manual/html_node/MO.html
  */
-export const mo: mo = {
+export const mo: {
+	parse: (
+		buffer: Buffer | string,
+		defaultCharset: string,
+	) => GetTextTranslations | false;
+	compile: (table: GetTextTranslations) => Buffer;
+} = {
 	parse: moParser,
 	compile: moCompiler,
 };
 
-export default { po, mo };
+const GettextParser = { po, mo };
+
+export default GettextParser;

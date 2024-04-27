@@ -1,5 +1,4 @@
-import type { Buffer } from "safe-buffer";
-import { Compiler } from "./compiler.js";
+import PoCompiler from "./PoCompiler.js";
 import type { GetTextTranslations, parserOptions } from "./types.js";
 
 /**
@@ -8,13 +7,13 @@ import type { GetTextTranslations, parserOptions } from "./types.js";
  *
  * @param {GetTextTranslations} table Translation object
  * @param {parserOptions} options Compiler options
- * @return {Buffer} Compiled PO object
+ * @return {string | Buffer} Compiled PO object
  */
-export default function compile(
+export default function CompilePo(
 	table: GetTextTranslations,
-	options: parserOptions,
-): Buffer {
-	const compiler = new Compiler(table, options);
+	options?: parserOptions,
+): string | Buffer {
+	const compiler = new PoCompiler(table, options);
 
 	return compiler.compile();
 }

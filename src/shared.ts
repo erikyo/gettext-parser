@@ -27,8 +27,8 @@ const PLURAL_FORM_HEADER_NPLURALS_REGEX: RegExp =
 /**
  * Parses a header string into an object of key-value pairs
  *
- * @param {String} str Header string
- * @return {{[headerName: string]: string}} An object of key-value pairs
+ * @param str Header string
+ * @return An object of key-value pairs
  */
 export function parseHeader(str = ""): Header {
 	return str.split("\n").reduce((headers: Header, line: string) => {

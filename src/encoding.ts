@@ -1,57 +1,45 @@
 import { decode, encode } from "iconv-lite";
 
 /**
- * Convert encoding of an UTF-8 string or a buffer
+ * Convert encoding of a UTF-8 string or a buffer
  *
- * @param {String|Buffer} strRaw String to be converted
- * @param {String} toRaw Encoding to be converted to
- * @param {String} [fromRaw='UTF-8'] Encoding to be converted from
- * @return {Buffer} Encoded string
+ * @param strRaw String to be converted
+ * @param toRaw Encoding to be converted to
+ * @param [fromRaw='UTF-8'] Encoding to be converted from
+ * @return Encoded string
  */
 export default function convert(
 	strRaw: string | Buffer,
 	toRaw: string,
-	fromRaw?: string,
-): Buffer {
-	const from = checkEncoding(fromRaw || "UTF-8");
-	const to = checkEncoding(toRaw || "UTF-8");
+	fromRaw = "UTF-8",
+): Buffer | string {
+	const from = checkEncoding(fromRaw);
+	const to = checkEncoding(toRaw);
 	let str = strRaw || "";
 
-	let result: Buffer | string;
-
-	if (from !== "UTF-8" && typeof str === "string") {
-		str = Buffer.from(str, "binary");
+	if (from === "UTF-8" && typeof str === "string") {
+		str = Buffer.from(str, "utf-8");
 	}
 
 	if (from === to) {
-		if (typeof str === "string") {
-			result = Buffer.from(str);
-		} else {
-			result = str;
-		}
-	} else {
-		try {
-			result = convertIconvLite(str, to, from);
-		} catch (E) {
-			console.error(E);
-			result = str;
-		}
+		return Buffer.from(str);
 	}
 
-	if (typeof result === "string") {
-		result = Buffer.from(result, "utf-8");
+	try {
+		return convertIconvLite(str, to, from);
+	} catch (E) {
+		console.error(E);
+		return strRaw as Buffer;
 	}
-
-	return result;
 }
 
 /**
  * Convert encoding of astring with iconv-lite
  *
- * @param {String|Buffer} str String to be converted
- * @param {String} to Encoding to be converted to
- * @param {String} [from='UTF-8'] Encoding to be converted from
- * @return {Buffer} Encoded string
+ * @param str String to be converted
+ * @param to Encoding to be converted to
+ * @param [from='UTF-8'] Encoding to be converted from
+ * @return Encoded string
  */
 export function convertIconvLite(
 	str: Buffer | string,
@@ -70,10 +58,10 @@ export function convertIconvLite(
 /**
  * Converts charset name if needed
  *
- * @param {String} name Character set
- * @return {String} Character set name
+ * @param name Character set
+ * @return Character set name
  */
-export function checkEncoding(name: string) {
+export function checkEncoding(name: string): string {
 	return (name || "")
 		.toString()
 		.trim()

@@ -1,5 +1,3 @@
-import type { Buffer } from "safe-buffer";
-
 export interface GetTextComment {
 	translator?: string;
 	reference?: string;
@@ -29,8 +27,8 @@ export interface GetTextTranslations {
 	obsolete?:
 		| boolean
 		| { [msgctxt: string]: { [msgId: string]: GetTextTranslation } };
-	charset?: string;
-	headers?: { [headerName: string]: string };
+	charset: string;
+	headers: { [headerName: string]: string };
 	translations: gettextTranslation;
 }
 
@@ -39,15 +37,59 @@ export type gettextTranslation = {
 };
 
 export interface parserOptions {
-	eol?: string;
-	defaultCharset?: string;
-	validation?: boolean;
-	foldLength?: number;
-	escapeCharacters?: boolean;
-	sort?: boolean;
+	foldLength: number;
+	eol: string;
+	defaultCharset: string;
+	validation: boolean;
+	escapeCharacters: boolean;
+	sort: boolean;
 }
 
 export interface Compiler {
 	_table: GetTextTranslations;
 	compile(): Buffer | string | undefined | null;
 }
+
+export interface LexerError extends SyntaxError {
+	lineNumber: number;
+}
+
+export interface State {
+	none?: number;
+	comments: number;
+	key: number;
+	string: number;
+	obsolete: number;
+}
+
+/**
+ * The PO parser options
+ */
+export interface poParserOptions {
+	defaultCharset?: string;
+	validation?: boolean;
+}
+
+export interface PoNode {
+	comments?: GetTextComment;
+	msgctxt?: string;
+	msgid?: string;
+	msgid_plural?: string;
+	msgstr?: string[];
+	type?: number;
+	value: string;
+	quote?: string;
+	obsolete?: boolean;
+}
+
+export type BufferWriteFunc =
+	| "writeUInt32LE"
+	| "writeUInt32BE"
+	| "writeInt32LE"
+	| "writeInt32BE";
+
+export type BufferReadFunc =
+	| "readUInt32LE"
+	| "readUInt32BE"
+	| "readInt32LE"
+	| "readInt32BE";

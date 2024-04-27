@@ -19,8 +19,9 @@
 	},
 	"scripts": {
 		"lint": "npx @biomejs/biome check --apply src test",
-		"test": "vitest",
+		"test": "vitest --coverage",
 		"build": "node build.mjs && npm run types",
+		"watch": "npx esbuild ./src/index.ts --bundle --outfile=lib/esm/index.js --watch",
 		"types": "tsc --emitDeclarationOnly"
 	},
 	"main": "./lib/esm/index.js",
@@ -29,17 +30,23 @@
 	"types": "./lib/@types/index.d.ts",
 	"license": "MIT",
 	"dependencies": {
-		"iconv-lite": "^0.6.3",
 		"content-type": "^1.0.5",
-		"safe-buffer": "^5.2.1"
+		"iconv-lite": "^0.6.3"
 	},
 	"devDependencies": {
-		"@types/node": "^20.12.7",
 		"@biomejs/biome": "1.7.1",
 		"@types/content-type": "^1.1.8",
-		"typescript": "^5.4.4",
+		"@types/node": "^20.12.7",
+		"@vitest/coverage-v8": "^1.5.2",
 		"esbuild": "^0.20.2",
+		"typescript": "^5.4.4",
 		"vitest": "^1.5.2"
 	},
-	"keywords": ["i18n", "l10n", "gettext", "mo", "po"]
+	"keywords": [
+		"i18n",
+		"l10n",
+		"gettext",
+		"mo",
+		"po"
+	]
 }

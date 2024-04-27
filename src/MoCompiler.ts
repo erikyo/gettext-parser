@@ -1,5 +1,4 @@
 import contentType from "content-type";
-import { Buffer } from "safe-buffer";
 import convert from "./encoding.js";
 import {
 	HEADERS,
@@ -7,25 +6,11 @@ import {
 	formatCharset,
 	generateHeader,
 } from "./shared.js";
-import type { GetTextTranslation, GetTextTranslations } from "./types.js";
-type BufferWriteFunc =
-	| "writeUInt32LE"
-	| "writeUInt32BE"
-	| "writeInt32LE"
-	| "writeInt32BE";
-
-/**
- * Exposes general compiler function. Takes a translation
- * object as a parameter and returns binary MO object
- *
- * @param {GetTextTranslations} table Translation object
- * @return {Buffer} Compiled binary MO object
- */
-export default function (table: GetTextTranslations): Buffer {
-	const compiler = new MoCompiler(table);
-
-	return compiler.compile();
-}
+import type {
+	BufferWriteFunc,
+	GetTextTranslation,
+	GetTextTranslations,
+} from "./types.js";
 
 class MoCompiler {
 	_table: GetTextTranslations;
@@ -49,7 +34,7 @@ class MoCompiler {
 			(result: { [headerName: string]: string }, key: string) => {
 				const lowerKey = key.toLowerCase();
 
-				if (lowerKey !== undefined && HEADERS.has(lowerKey)) {
+				if (lowerKey && HEADERS.has(lowerKey)) {
 					// POT-Creation-Date is removed in MO (see https://savannah.gnu.org/bugs/?49654)
 					if (lowerKey !== "pot-creation-date") {
 						result[HEADERS.get(lowerKey)] = headers[key];
@@ -123,21 +108,20 @@ class MoCompiler {
 	 * Generates an array of translation strings
 	 * in the form of [{msgid:... , msgstr:...}]
 	 *
-	 * @return {import('../index.d.ts').GetTextTranslations} Translation strings array
+	 * @return {GetTextTranslations} Translation strings array
 	 */
-	_generateList() {
-		const list = [];
+	_generateList(): { msgid: Buffer; msgstr: Buffer }[] {
+		const list: { msgid: Buffer; msgstr: Buffer }[] = [];
 
 		list.push({
 			msgid: Buffer.alloc(0),
-			msgstr: convert(generateHeader(this._table.headers), this._table.charset),
+			msgstr: convert(
+				generateHeader(this._table.headers),
+				this._table.charset,
+			) as Buffer,
 		});
 
 		for (const msgctxt in this._table.translations) {
-			if (typeof this._table.translations[msgctxt] !== "object") {
-				return;
-			}
-
 			for (const msgid of Object.keys(this._table.translations[msgctxt])) {
 				if (typeof this._table.translations[msgctxt][msgid] !== "object") {
 					continue;
@@ -152,20 +136,19 @@ class MoCompiler {
 				let key = msgid;
 
 				if (msgctxt) {
-					key = msgctxt + "\u0004" + key;
+					key = `${msgctxt}\u0004${key}`;
 				}
 
 				if (msgidPlural) {
-					key += "\u0000" + msgidPlural;
+					key += `\u0000${msgidPlural}`;
 				}
 
-				const value = []
-					.concat(this._table.translations[msgctxt][msgid].msgstr || [])
-					.join("\u0000");
+				const value =
+					this._table.translations[msgctxt][msgid].msgstr?.join("\u0000");
 
 				list.push({
-					msgid: convert(key, this._table.charset),
-					msgstr: convert(value, this._table.charset),
+					msgid: convert(key, this._table.charset) as Buffer,
+					msgstr: convert(value, this._table.charset) as Buffer,
 				});
 			}
 		}
@@ -179,7 +162,11 @@ class MoCompiler {
 	 * @param {any[]} list An array of translation strings from _generateList
 	 * @return {Object} Size data of {msgid, msgstr, total}
 	 */
-	_calculateSize(list) {
+	_calculateSize(list: { msgid: Buffer; msgstr: Buffer }[]): {
+		msgid: number;
+		msgstr: number;
+		total: number;
+	} {
 		let msgidLength = 0;
 		let msgstrLength = 0;
 		let totalLength = 0;
@@ -277,3 +264,5 @@ class MoCompiler {
 		return this._build(list, size);
 	}
 }
+
+export default MoCompiler;
