@@ -1,5 +1,4 @@
 import contentType from "content-type";
-import { Buffer } from "safe-buffer";
 import convert from "./encoding.js";
 import {
 	HEADERS,
@@ -15,13 +14,35 @@ import type {
 	parserOptions,
 } from "./types.js";
 
-export class Compiler {
-	private _table: GetTextTranslations;
-	private _options: parserOptions;
+function parseOptions(optionsRaw?: parserOptions): parserOptions {
+	const options: Partial<parserOptions> = { ...optionsRaw };
+	if (!("foldLength" in options)) {
+		options.foldLength = 76;
+	}
 
-	constructor(table: GetTextTranslations, options: parserOptions) {
+	if (!("escapeCharacters" in options)) {
+		options.escapeCharacters = true;
+	}
+
+	if (!("sort" in options)) {
+		options.sort = false;
+	}
+
+	if (!("eol" in options)) {
+		options.eol = "\n";
+	}
+
+	return options as parserOptions;
+}
+
+class PoCompiler {
+	_table: GetTextTranslations;
+	_options: parserOptions;
+
+	constructor(table: GetTextTranslations, options?: parserOptions) {
 		this._table = table;
-		this._options = options;
+
+		this._options = parseOptions(options);
 
 		this._table.translations = this._table.translations || {};
 
@@ -44,27 +65,11 @@ export class Compiler {
 
 		this._table.headers = headers;
 
-		if (!("foldLength" in this._options)) {
-			this._options.foldLength = 76;
-		}
-
-		if (!("escapeCharacters" in this._options)) {
-			this._options.escapeCharacters = true;
-		}
-
-		if (!("sort" in this._options)) {
-			this._options.sort = false;
-		}
-
-		if (!("eol" in this._options)) {
-			this._options.eol = "\n";
-		}
-
 		this._handleCharset();
 	}
 
 	/**
-	 * Converts a comments object to a comment string. The comment object is
+	 * Converts a comment object to a comment string. The comment object is
 	 * in the form of {translator:'', reference: '', extracted: '', flag: '', previous:''}
 	 *
 	 * @param {GetTextComment} comments A comments object
@@ -128,11 +133,14 @@ export class Compiler {
 		const msgidPlural = override.msgid_plural || block.msgid_plural;
 		/** @var {string[]} msgstr - Array of translation strings */
 		const msgstr = [].concat(override.msgstr || block.msgstr);
-		let comments = override.comments || block.comments;
+		const comments = override.comments || block.comments;
 
 		// add comments
-		if (comments && (comments = this._drawComments(comments))) {
-			response.push(comments);
+		if (comments) {
+			const commentsRender = this._drawComments(comments);
+			if (commentsRender) {
+				response.push(commentsRender);
+			}
 		}
 
 		if (msgctxt) {
@@ -159,16 +167,18 @@ export class Compiler {
 	/**
 	 * Escapes and joins a key and a value for the PO string
 	 *
-	 * @param {String} key Key name
-	 * @param {String} value Key value
-	 * @param {boolean} [obsolete] PO string is obsolete and must be commented out
-	 * @return {String} Joined and escaped key-value pair
+	 * @param keyRaw Key name
+	 * @param value Key value
+	 * @param  obsolete PO string is obsolete and must be commented out
+	 * @return {string} Joined and escaped key-value pair
 	 */
-	_addPOString(key = "", value = "", obsolete = false) {
-		key = key.toString();
+	_addPOString(keyRaw = "", valueRaw = "", obsolete = false): string {
+		let key = keyRaw.toString();
 		if (obsolete) {
-			key = "#~ " + key;
+			key = `#~ ${key}`;
 		}
+
+		let value = valueRaw;
 
 		let { foldLength, eol, escapeCharacters } = this._options;
 
@@ -187,7 +197,7 @@ export class Compiler {
 		let lines = [value];
 
 		if (obsolete) {
-			eol = eol + "#~ ";
+			eol = `${eol}#~ `;
 		}
 
 		if (foldLength > 0) {
@@ -237,12 +247,13 @@ export class Compiler {
 	/**
 	 * Flatten and sort translations object
 	 *
-	 * @param {{[msgctxt: string]: { [msgid: string]: import('../index.d.ts').GetTextTranslation }}} section Object to be prepared (translations or obsolete)
-	 * @returns {import('../index.d.ts').GetTextTranslation[]} Prepared array
+	 * @param {{[msgctxt: string]: { [msgid: string]: GetTextTranslation }}} section Object to be prepared (translations or obsolete)
+	 * @returns {GetTextTranslation[]} Prepared array
 	 */
-	_prepareSection(section) {
-		/** @type {import('../index.d.ts').GetTextTranslation[]} response - Array of prepared objects */
-		let response = [];
+	_prepareSection(section: {
+		[msgctxt: string]: { [msgid: string]: GetTextTranslation };
+	}): GetTextTranslation[] | undefined {
+		let response: GetTextTranslation[] = [];
 
 		for (const msgctxt in section) {
 			if (typeof section[msgctxt] !== "object") {
@@ -264,7 +275,7 @@ export class Compiler {
 
 		const { sort } = this._options;
 
-		if (sort !== false) {
+		if (sort) {
 			if (typeof sort === "function") {
 				response = response.sort(sort);
 			} else {
@@ -280,17 +291,16 @@ export class Compiler {
 	 *
 	 * @return {Buffer} Compiled PO object
 	 */
-	compile(): Buffer {
-		const headerBlock =
-			(this._table.translations[""] && this._table.translations[""][""]) || {};
+	compile(): Buffer | string {
+		const headerBlock = this._table.translations[""]?.[""] || {};
 		let response = [];
 
 		const translations = this._prepareSection(this._table.translations);
-		response = translations.map((r) => this._drawBlock(r));
+		response = translations?.map((r) => this._drawBlock(r)) || [];
 
 		if (typeof this._table.obsolete === "object") {
 			const obsolete = this._prepareSection(this._table.obsolete);
-			if (obsolete.length) {
+			if (obsolete?.length) {
 				response = response.concat(
 					obsolete.map((r) => this._drawBlock(r, {}, true)),
 				);
@@ -299,6 +309,7 @@ export class Compiler {
 
 		const { eol } = this._options;
 
+		// TODO SOME GLITCHES HERE
 		response.unshift(
 			this._drawBlock(headerBlock, {
 				msgstr: generateHeader(this._table.headers),
@@ -309,6 +320,11 @@ export class Compiler {
 			return Buffer.from(response.join(eol + eol) + eol, "utf-8");
 		}
 
-		return convert(response.join(eol + eol) + eol, this._table.charset);
+		return convert(
+			response.join(eol + eol) + eol,
+			this._table.charset as string,
+		);
 	}
 }
+
+export default PoCompiler;
