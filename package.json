@@ -3,15 +3,19 @@
 	"description": "Gettext parser fork, with modern js and types, this library is used to parse and compile gettext po and mo files to/from json",
 	"version": "1.0.0",
 	"author": "erikyo <https://github.com/erikyo>",
-	"homepage": "http://github.com/smhg/gettext-parser",
+	"homepage": "https://github.com/erikyo/gettext-parser-next",
 	"repository": {
 		"type": "git",
-		"url": "http://github.com/smhg/gettext-parser.git"
+		"url": "https://github.com/erikyo/gettext-parser-next.git"
+	},
+	"bugs": {
+		"url": "https://github.com/erikyo/gettext-parser-next/issues"
 	},
 	"type": "module",
 	"engines": {
 		"node": ">=14"
 	},
+	"files": ["lib", "tests", "*.json", "*.md"],
 	"scripts": {
 		"lint": "npx @biomejs/biome check --apply src test",
 		"test": "vitest",
@@ -25,6 +29,7 @@
 	"module": "./lib/esm/index.js",
 	"require": "./lib/cjs/index.js",
 	"types": "./lib/@types/index.d.ts",
+	"sideEffects": false,
 	"license": "MIT",
 	"dependencies": {
 		"content-type": "^1.0.5",
