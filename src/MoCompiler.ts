@@ -8,7 +8,6 @@ import {
 } from "./shared.js";
 import type {
 	BufferWriteFunc,
-	GetTextTranslationRaw,
 	GetTextTranslations,
 	TranslationEntry,
 } from "./types.js";
