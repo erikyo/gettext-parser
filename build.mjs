@@ -17,11 +17,11 @@ async function run() {
 		entryPoints: ["src/**/*.ts"],
 		outdir: "lib/cjs",
 		tsconfig: "tsconfig.json",
-		minify: isDev,
+		minify: !isDev,
 		platform: "node",
 		bundle: true,
 		target: "es2015",
-		sourcemap: !isDev,
+		sourcemap: isDev,
 	});
 
 	const esm = es.build({
