@@ -10,14 +10,14 @@ Parse and compile gettext *po* and *mo* files with node.js, nothing more, nothin
 
 We are using the same code, same api and same options but refactored to be strictly typed and bundled with esbuild to cjs and esm. 
 
-Additionally: 
-- Some old modules that aren't anymore needed are removed
-- Types are bundled, and you can now avoid importing the types using another dependency
-- We are using `@biomejs/biome` for linting and testing and `vitest` for testing the library
-- the package is published as `esm` and `cjs`, and weight is reduced by 50% of the original package
-- Faster than the original package 
-- All the deprecations are removed, codebase full upgraded when possible replacing `foreach` with `for ...of`, Structural replace prototype to ES6 class
-- Smooth integration with [gettext-merger](https://github.com/erikyo/gettext-merger) to merge po and mo files 
+#### In what ways does this fork differ? 
+- Removed some old modules that are no longer needed to keep the number of dependencies as lower as possible.
+- Types are now bundled, and you can avoid importing them using another dependency.
+- We use `@biomejs/biome` for linting and `vitest` for testing the library, replacing Jest and ESLint. This keeps also the number of 'dev' dependencies as low as possible.
+- The package is published as both `esm` and `cjs`, and its weight has been reduced by 50% compared to the original package.
+- Faster than the original package because the functions have been modified to be pure functions.
+- All deprecations have been removed, and the codebase has been upgraded to modern JavaScript. Structural changes include replacing prototypes with ES6 classes.
+- Smooth integration with [gettext-merger](https://github.com/erikyo/gettext-merger) for merging PO and MO files.
 
 ## Usage
 
