@@ -1,4 +1,4 @@
-gettext-parser [![ci](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml)
+gettext-parser-next [![ci](https://github.com/erikyo/gettext-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/erikyo/gettext-parser/actions/workflows/ci.yml)
 ==============
 
 
