@@ -1,5 +1,8 @@
 # Change Log
 
+## [1.0.0] - 2024-04-28
+- Initial release of the ts version 
+
 **Note:** since version 4.0.0, the changelog moved to the GitHub [releases](https://github.com/smhg/gettext-parser/releases) page.
 
 ## [4.0.0-alpha.1] - 2019-03-17

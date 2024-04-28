@@ -1,4 +1,7 @@
-/test
-/lib
-.eslintrc.js
-.gitignore
+node_modules
+tests/fixtures
+src
+.idea
+.github
+coverage
+docs
