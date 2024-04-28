@@ -1,0 +1,20 @@
+{
+	"compilerOptions": {
+		"noImplicitAny": true,
+		"removeComments": false,
+		"moduleResolution": "node16",
+		"module": "Node16",
+		"target": "ES2022",
+		"strict": true,
+		"rootDir": "src",
+		"outDir": "lib",
+		"declarationDir": "lib/@types",
+		"declaration": true,
+		"emitDeclarationOnly": true,
+		"pretty": false,
+		"skipLibCheck": true,
+		"allowSyntheticDefaultImports": true
+	},
+	"include": ["src/**/*.ts"],
+	"exclude": ["lib/**/*.d.ts"]
+}

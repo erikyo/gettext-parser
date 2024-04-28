@@ -1,9 +1,23 @@
 gettext-parser [![ci](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/smhg/gettext-parser/actions/workflows/ci.yml)
 ==============
 
+
+## About
+
+> *Please note:* THIS IS A FORK OF [gettext-parser](https://github.com/smhg/gettext-parser)
+
 Parse and compile gettext *po* and *mo* files with node.js, nothing more, nothing less.
 
-> *Please note:* starting with version 3 only latest LTS and latest stable node versions are supported. **Use version 2 with older node versions.**
+We are using the same code, same api and same options but refactored to be strictly typed and bundled with esbuild to cjs and esm. 
+
+Additionally: 
+- Some old modules that aren't anymore needed are removed
+- Types are bundled, and you can now avoid importing the types using another dependency
+- We are using `@biomejs/biome` for linting and testing and `vitest` for testing the library
+- the package is published as `esm` and `cjs`, and weight is reduced by 50% of the original package
+- Faster than the original package 
+- All the deprecations are removed, codebase full upgraded when possible replacing `foreach` with `for ...of`, Structural replace prototype to ES6 class
+- Smooth integration with [gettext-merger](https://github.com/erikyo/gettext-merger) to merge po and mo files 
 
 ## Usage
 
@@ -212,3 +226,7 @@ If you need to convert *gettext-parser* formatted translation object to somethin
 ## License
 
 **MIT**
+
+Includes other software related under the MIT license:
+- Gettext parser, @andris9, 2013. For licensing see /[LICENSE](LICENSE)
+- [encoding](https://github.com/andris9/encoding), @andris9, 2012. For licensing see /[LICENSE](https://github.com/andris9/encoding/blob/master/LICENSE)
