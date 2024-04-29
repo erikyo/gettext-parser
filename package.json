@@ -11,7 +11,6 @@
 	"bugs": {
 		"url": "https://github.com/erikyo/gettext-parser-next/issues"
 	},
-	"type": "module",
 	"engines": {
 		"node": ">=14"
 	},
@@ -21,13 +20,17 @@
 		"test": "vitest",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
-		"build": "node build.mjs && npm run types",
+		"build": "node build.js && npm run types",
 		"watch": "npx esbuild ./src/index.ts --bundle --outfile=lib/esm/index.js --watch",
 		"types": "tsc --emitDeclarationOnly"
 	},
 	"main": "./lib/esm/index.js",
 	"module": "./lib/esm/index.js",
-	"require": "./lib/cjs/index.js",
+	"exports": {
+		"default": "./lib/esm/index.js",
+		"module": "./lib/esm/index.js",
+		"require": "./lib/cjs/index.js"
+	},
 	"types": "./lib/@types/index.d.ts",
 	"sideEffects": false,
 	"license": "MIT",

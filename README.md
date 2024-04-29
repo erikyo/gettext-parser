@@ -1,7 +1,6 @@
 gettext-parser-next [![ci](https://github.com/erikyo/gettext-parser/actions/workflows/ci.yml/badge.svg)](https://github.com/erikyo/gettext-parser/actions/workflows/ci.yml)
 ==============
 
-
 ## About
 
 > *Please note:* THIS IS A FORK OF [gettext-parser](https://github.com/smhg/gettext-parser)
@@ -23,14 +22,16 @@ We are using the same code, same api and same options but refactored to be stric
 
 Include the library:
 
-    var gettextParser = require("gettext-parser");
+```javascript
+import gettextParser from "gettext-parser";
+```
 
 ### Parse PO files
 
 Parse a PO file with
-
-    gettextParser.po.parse(input[, options]) → Object
-
+```javascript
+gettextParser.po.parse(input[, options]) → Object
+```
 Where
 
   * **input** is a *po* file as a Buffer or an unicode string. Charset is converted to unicode from other encodings only if the input is a Buffer, otherwise the charset information is discarded
@@ -78,9 +79,9 @@ po.on('data', function(data){
 ### Compile PO from a translation object
 
 If you have a translation object you can convert this to a valid PO file with
-
-    gettextParser.po.compile(data[, options]) → Buffer
-
+```javascript
+gettextParser.po.compile(data[, options]) → Buffer
+```
 Where
 
   * **data** is a translation object either got from parsing a PO/MO file or composed by other means
@@ -105,9 +106,9 @@ require('fs').writeFileSync('filename.po', output);
 ### Parse MO files
 
 Parse a MO file with
-
-    gettextParser.mo.parse(input[, defaultCharset]) → Object
-
+```javascript
+gettextParser.mo.parse(input[, defaultCharset]) → Object
+```
 Where
 
   * **input** is a *mo* file as a Buffer
@@ -228,5 +229,5 @@ If you need to convert *gettext-parser* formatted translation object to somethin
 **MIT**
 
 Includes other software related under the MIT license:
-- Gettext parser, @andris9, 2013. For licensing see /[LICENSE](LICENSE)
-- [encoding](https://github.com/andris9/encoding), @andris9, 2012. For licensing see /[LICENSE](https://github.com/andris9/encoding/blob/master/LICENSE)
+- Gettext parser, @andris9 and contributors, 2013. For licensing see /[LICENSE](LICENSE)
+- [encoding](https://github.com/andris9/encoding), @andris9 and contributors, 2012. For licensing see /[LICENSE](https://github.com/andris9/encoding/blob/master/LICENSE)

@@ -4,4 +4,5 @@ src
 .idea
 .github
 coverage
+benchmark
 docs

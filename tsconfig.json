@@ -2,8 +2,8 @@
 	"compilerOptions": {
 		"noImplicitAny": true,
 		"removeComments": false,
-		"moduleResolution": "node16",
-		"module": "Node16",
+		"moduleResolution": "NodeNext",
+		"module": "NodeNext",
 		"target": "ES2022",
 		"strict": true,
 		"rootDir": "src",
@@ -16,5 +16,5 @@
 		"allowSyntheticDefaultImports": true
 	},
 	"include": ["src/**/*.ts"],
-	"exclude": ["lib/**/*.d.ts"]
+	"exclude": ["lib/**/*", "benchmark/**/*"]
 }
