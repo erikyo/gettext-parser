@@ -1,0 +1,62 @@
+msgid ""
+msgstr ""
+"Language: English\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Generator: PhraseApp (phraseapp.com)\n"
+
+msgid "boolean_key"
+msgstr ""
+
+msgid "empty_string_translation"
+msgstr ""
+
+#I'm a very important description for this key!
+msgid "key_with_description"
+msgstr ""
+
+msgid "key_with_line-break"
+msgstr ""
+
+msgid "nested.deeply.key"
+msgstr ""
+
+msgid "nested.key"
+msgstr ""
+
+msgid "null_translation"
+msgstr ""
+
+msgid "pluralized_key"
+msgid_plural ""
+msgstr[0] ""
+msgstr[1] ""
+
+msgid "boolean_key"
+msgstr ""
+
+msgid "empty_string_translation"
+msgstr ""
+
+#I'm a very important description for this key!
+msgid "key_with_description"
+msgstr ""
+
+msgid "key_with_line-break"
+msgstr ""
+
+msgid "nested.deeply.key"
+msgstr ""
+
+msgid "nested.key"
+msgstr ""
+
+msgid "null_translation"
+msgstr ""
+
+msgid "pluralized_key"
+msgid_plural ""
+msgstr[0] ""
+msgstr[1] ""
