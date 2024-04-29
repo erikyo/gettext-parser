@@ -1,4 +1,4 @@
-import { decode, encode } from "iconv-lite";
+import iconv from "iconv-lite";
 
 /**
  * Convert encoding of a UTF-8 string or a buffer
@@ -47,12 +47,12 @@ export function convertIconvLite(
 	from: string,
 ): string | Buffer {
 	if (to === "UTF-8") {
-		return decode(str as Buffer, from);
+		return iconv.decode(str as Buffer, from);
 	}
 	if (from === "UTF-8" && typeof str === "string") {
-		return encode(str, to);
+		return iconv.encode(str, to);
 	}
-	return encode(decode(str as Buffer, from), to);
+	return iconv.encode(iconv.decode(str as Buffer, from), to);
 }
 
 /**

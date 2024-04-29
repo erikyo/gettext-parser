@@ -7,12 +7,12 @@ import type {
 } from "./types.js";
 
 class PoParserTransform extends Transform {
-	_cache: Buffer[];
-	private _cacheSize: number;
-	_parser: PoParser | false;
 	options: poParserOptions;
 	initialTreshold: number;
+	_cache: Buffer[];
+	_parser: PoParser | false;
 	_tokens: Partial<GetTextTranslations>;
+	private _cacheSize: number;
 	private _writableState: { objectMode?: boolean } = {};
 	private _readableState: { objectMode?: boolean } = {};
 
@@ -50,23 +50,26 @@ class PoParserTransform extends Transform {
 		}
 
 		if (!this._parser) {
+			// Add the chunk to the cache
 			this._cache.push(chunk);
 			this._cacheSize += chunk.length;
 
-			// wait until the first 1kb before parsing headers for charset
+			// Wait until the first 1kb before parsing headers for charset
 			if (this._cacheSize < this.initialTreshold) {
 				return setImmediate(done);
 			}
-
 			if (this._cacheSize) {
+				// Concatenate the cached chunks and process them
 				chunk = Buffer.concat(this._cache, this._cacheSize);
 				this._cacheSize = 0;
 				this._cache = [];
 			}
 
+			// Create the parser with the chunk
 			this._parser = new PoParser(chunk, this.options);
 		} else if (this._cacheSize) {
-			// this only happens if we had an uncompleted 8bit sequence from the last iteration
+			// This only happens if we had an uncompleted 8bit sequence from the last iteration
+			// Add the chunk to the cache
 			this._cache.push(chunk);
 			this._cacheSize += chunk.length;
 			chunk = Buffer.concat(this._cache, this._cacheSize);
@@ -74,8 +77,8 @@ class PoParserTransform extends Transform {
 			this._cache = [];
 		}
 
-		// cache 8bit bytes from the end of the chunk
-		// helps if the chunk ends in the middle of an utf-8 sequence
+		// Cache 8bit bytes from the end of the chunk
+		// Helps if the chunk ends in the middle of an UTF-8 sequence
 		for (i = chunk.length - 1; i >= 0; i--) {
 			if (chunk[i] >= 0x80) {
 				len++;
@@ -83,16 +86,17 @@ class PoParserTransform extends Transform {
 			}
 			break;
 		}
-		// it seems we found some 8bit bytes from the end of the string, so let's cache these
+		// It seems we found some 8bit bytes from the end of the string, so let's cache these
 		if (len) {
 			this._cache = [chunk.slice(chunk.length - len)];
 			this._cacheSize = this._cache[0].length;
 			chunk = chunk.slice(0, chunk.length - len);
 		}
 
-		// chunk might be empty if it only continued of 8bit bytes and these were all cached
+		// Chunk might be empty if it only continued of 8bit bytes and these were all cached
 		if (chunk.length) {
 			try {
+				// Process the chunk using the parser
 				this._parser._lexer(this._parser._toString(chunk));
 			} catch (error) {
 				setImmediate(() => {
@@ -103,7 +107,7 @@ class PoParserTransform extends Transform {
 			}
 		}
 
-		setImmediate(done);
+		done();
 	}
 
 	_flush(done: TransformCallback) {
@@ -131,7 +135,7 @@ class PoParserTransform extends Transform {
 			this.push(this._parser._finalize(this._parser._lex));
 		}
 
-		setImmediate(done);
+		done();
 	}
 }
 

@@ -67,7 +67,7 @@ class PoParser {
 			quotes: /["']/,
 			comments: /#/,
 			whitespace: /\s/,
-			key: /[\w\-[\]]/,
+			key: /[\w\-\[\]]/,
 			keyNames: /^(?:msgctxt|msgid(?:_plural)?|msgstr(?:\[\d+])?)$/,
 		};
 
@@ -440,7 +440,7 @@ class PoParser {
 	 * Validate token
 	 *
 	 * @param {GetTextTranslationRaw} token Parsed token
-	 * @param {GetTextTranslation} translations Translation table
+	 * @param {gettextTranslation} translations Translation table
 	 * @param {string} msgctxt Message entry context
 	 * @param {number} nplurals Number of epected plural forms
 	 * @throws Error Will throw an error if token validation fails

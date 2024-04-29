@@ -12,8 +12,14 @@ import moParser from "./parseMo.js";
 import parsePo from "./parsePo.js";
 import StreamPo from "./streamPo.js";
 
+export * from "./types.js";
+
 /**
  * Translation parser and compiler for PO files
+ * Parse a PO file with
+ *
+ * @example `gettextParser.po.parse(input[, options]) → Object`
+ *
  * @see https://www.gnu.org/software/gettext/manual/html_node/PO.html
  */
 export const po: {
@@ -34,9 +40,12 @@ export const po: {
 	createParseStream: StreamPo,
 	compile: CompilePo,
 };
-
 /**
- * Translation parser and compiler for PO files
+ * Translation parser and compiler for MO files
+ * Parse a MO file with:
+ *
+ * @example `gettextParser.mo.parse(input[, defaultCharset]) → Object`
+ *
  * @see https://www.gnu.org/software/gettext/manual/html_node/MO.html
  */
 export const mo: {
@@ -50,6 +59,5 @@ export const mo: {
 	compile: moCompiler,
 };
 
-const GettextParser = { po, mo };
-
-export default GettextParser;
+const gettextParser = { po, mo };
+export default gettextParser;
