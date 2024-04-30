@@ -1,4 +1,4 @@
-import contentType from "content-type";
+import * as contentType from "content-type";
 import convert from "./encoding.js";
 import {
 	HEADERS,

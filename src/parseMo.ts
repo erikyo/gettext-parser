@@ -8,7 +8,7 @@ import type { GetTextTranslations } from "./types.js";
  * @param {String} [defaultCharset] Default charset to use
  * @return {Object} Translation object
  */
-function parseMo(
+export function parseMo(
 	buffer: Buffer,
 	defaultCharset?: string,
 ): GetTextTranslations | false {
@@ -16,5 +16,3 @@ function parseMo(
 
 	return parser.parse();
 }
-
-export default parseMo;

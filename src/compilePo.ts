@@ -9,7 +9,7 @@ import type { GetTextTranslations, parserOptions } from "./types.js";
  * @param {parserOptions} options Compiler options
  * @return {string | Buffer} Compiled PO object
  */
-export default function CompilePo(
+export function compilePo(
 	table: GetTextTranslations,
 	options?: parserOptions,
 ): string | Buffer {

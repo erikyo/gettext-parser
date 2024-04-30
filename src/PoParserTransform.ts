@@ -78,7 +78,7 @@ class PoParserTransform extends Transform {
 		}
 
 		// Cache 8bit bytes from the end of the chunk
-		// Helps if the chunk ends in the middle of an UTF-8 sequence
+		// Helps if the chunk ends in the middle of a UTF-8 sequence
 		for (i = chunk.length - 1; i >= 0; i--) {
 			if (chunk[i] >= 0x80) {
 				len++;
@@ -88,12 +88,12 @@ class PoParserTransform extends Transform {
 		}
 		// It seems we found some 8bit bytes from the end of the string, so let's cache these
 		if (len) {
-			this._cache = [chunk.slice(chunk.length - len)];
+			this._cache = [chunk.subarray(chunk.length - len)];
 			this._cacheSize = this._cache[0].length;
-			chunk = chunk.slice(0, chunk.length - len);
+			chunk = chunk.subarray(0, chunk.length - len);
 		}
 
-		// Chunk might be empty if it only continued of 8bit bytes and these were all cached
+		// Chunk might be empty if it only continued of 8bit bytes, and these were all cached
 		if (chunk.length) {
 			try {
 				// Process the chunk using the parser

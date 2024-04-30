@@ -1,18 +1,14 @@
-import CompilePo from "./compilePo.js";
-
 import type { Transform, TransformOptions } from "node:stream";
+import { compileMo } from "./compileMo.js";
+import { compilePo } from "./compilePo.js";
+import { parseMo } from "./parseMo.js";
+import { parsePo } from "./parsePo.js";
+import { streamPo } from "./streamPo.js";
 import type {
 	GetTextTranslations,
 	parserOptions,
 	poParserOptions,
 } from "./types.js";
-
-import moCompiler from "./compileMo.js";
-import moParser from "./parseMo.js";
-import parsePo from "./parsePo.js";
-import StreamPo from "./streamPo.js";
-
-export * from "./types.js";
 
 /**
  * Translation parser and compiler for PO files
@@ -22,7 +18,7 @@ export * from "./types.js";
  *
  * @see https://www.gnu.org/software/gettext/manual/html_node/PO.html
  */
-export const po: {
+const po: {
 	parse: (
 		buffer: Buffer | string,
 		options?: poParserOptions,
@@ -37,8 +33,8 @@ export const po: {
 	) => Transform;
 } = {
 	parse: parsePo,
-	createParseStream: StreamPo,
-	compile: CompilePo,
+	createParseStream: streamPo,
+	compile: compilePo,
 };
 /**
  * Translation parser and compiler for MO files
@@ -48,15 +44,15 @@ export const po: {
  *
  * @see https://www.gnu.org/software/gettext/manual/html_node/MO.html
  */
-export const mo: {
+const mo: {
 	parse: (
 		buffer: Buffer,
 		defaultCharset?: string,
 	) => GetTextTranslations | false;
 	compile: (table: GetTextTranslations) => Buffer;
 } = {
-	parse: moParser,
-	compile: moCompiler,
+	parse: parseMo,
+	compile: compileMo,
 };
 
 const gettextParser = { po, mo };

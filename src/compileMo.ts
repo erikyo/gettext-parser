@@ -8,10 +8,8 @@ import type { GetTextTranslations } from "./types.js";
  * @param {GetTextTranslations} table Translation object
  * @return {Buffer} Compiled binary MO object
  */
-function compileMo(table: GetTextTranslations): Buffer {
+export function compileMo(table: GetTextTranslations): Buffer {
 	const compiler = new MoCompiler(table);
 
 	return compiler.compile();
 }
-
-export default compileMo;

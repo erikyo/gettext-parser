@@ -11,7 +11,7 @@ import type {
  * @param input PO object
  * @param [options] Optional options with defaultCharset and validation
  */
-export default function parsePo(
+export function parsePo(
 	input: Buffer | string,
 	options: poParserOptions = {},
 ): GetTextTranslations {

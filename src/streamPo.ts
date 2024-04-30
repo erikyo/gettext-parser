@@ -7,7 +7,7 @@ import type { PoParserTransformOptions, poParserOptions } from "./types.js";
  * @param {poParserOptions} [options] Optional options with defaultCharset and validation
  * @param {TransformOptions} [transformOptions] Optional stream options
  */
-export default function StreamPo(
+export function streamPo(
 	options: poParserOptions = {},
 	transformOptions: PoParserTransformOptions = {},
 ) {

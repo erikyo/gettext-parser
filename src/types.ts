@@ -1,5 +1,6 @@
 import type { TransformOptions } from "node:stream";
 
+export * from "./types.js";
 /**
  * The PO translation entry
  * @property {string} msgctxt context for this translation, if not present the default context applies

@@ -1,4 +1,4 @@
-import iconv from "iconv-lite";
+import * as iconv from "iconv-lite";
 
 /**
  * Convert encoding of a UTF-8 string or a buffer
@@ -41,7 +41,7 @@ export default function convert(
  * @param [from='UTF-8'] Encoding to be converted from
  * @return Encoded string
  */
-export function convertIconvLite(
+function convertIconvLite(
 	str: Buffer | string,
 	to: string,
 	from: string,
@@ -61,7 +61,7 @@ export function convertIconvLite(
  * @param name Character set
  * @return Character set name
  */
-export function checkEncoding(name: string): string {
+function checkEncoding(name: string): string {
 	return (name || "")
 		.toString()
 		.trim()
