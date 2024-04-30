@@ -151,7 +151,7 @@ class PoParser {
 			switch (this._state) {
 				case this.states.none:
 				case this.states.obsolete:
-					if (chr.match(this.symbols.quotes)) {
+					if (chr === '"' || chr === "'") {
 						this._node = {
 							type: this.types.string,
 							value: "",
@@ -159,7 +159,7 @@ class PoParser {
 						};
 						this._lex.push(this._node as GetTextTranslationRaw);
 						this._state = this.states.string;
-					} else if (chr.match(this.symbols.comments)) {
+					} else if (chr === "#" || chr === ",") {
 						this._node = {
 							type: this.types.comments,
 							value: "",
