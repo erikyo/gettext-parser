@@ -1,9 +1,9 @@
 import { readFile as fsReadFile } from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
-import { mo } from "../src/index.js";
+import gettextParser from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -18,7 +18,7 @@ describe("MO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/utf8.mo")),
 			]);
 
-			const compiled = mo.compile(JSON.parse(json));
+			const compiled = gettextParser.mo.compile(JSON.parse(json));
 
 			expect(compiled.toString("utf8")).to.deep.equal(moData.toString("utf8"));
 		});
@@ -31,7 +31,7 @@ describe("MO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/latin13.mo")),
 			]);
 
-			const compiled = mo.compile(JSON.parse(json));
+			const compiled = gettextParser.mo.compile(JSON.parse(json));
 
 			expect(compiled.toString("utf8")).to.equal(moData.toString("utf8"));
 		});

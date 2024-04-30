@@ -1,10 +1,10 @@
 import { readFile as fsReadFile } from "node:fs";
 import { EOL } from "node:os";
-import path from "node:path";
+import * as path from "node:path";
 import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { describe, expect, it } from "vitest";
-import { po } from "../src/index.js";
+import gettextParser from "../src/index.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,7 +19,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/headers-case.po"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { eol: EOL })
 				.toString("utf8");
 
@@ -34,7 +34,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/utf8.po"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { eol: EOL })
 				.toString("utf8");
 
@@ -50,7 +50,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/latin13.po"), "latin1"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { eol: EOL })
 				.toString("latin1");
 
@@ -65,7 +65,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/plural.pot"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { eol: EOL })
 				.toString("utf8");
 
@@ -80,7 +80,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/utf8-no-folding.po"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { foldLength: 0, eol: EOL })
 				.toString("utf8");
 
@@ -93,7 +93,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/utf8-folding-100.po"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { foldLength: 100, eol: EOL })
 				.toString("utf8");
 
@@ -108,7 +108,7 @@ describe("PO Compiler", () => {
 				readFile(path.join(__dirname, "fixtures/sort-test.pot"), "utf8"),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), { sort: true, eol: EOL })
 				.toString("utf8");
 
@@ -151,10 +151,10 @@ describe("PO Compiler", () => {
 				),
 			]);
 
-			const compiled1 = po
+			const compiled1 = gettextParser.po
 				.compile(JSON.parse(json1), { sort: compareMsgidAndMsgctxt, eol: EOL })
 				.toString("utf8");
-			const compiled2 = po
+			const compiled2 = gettextParser.po
 				.compile(JSON.parse(json2), { sort: compareMsgidAndMsgctxt, eol: EOL })
 				.toString("utf8");
 
@@ -177,7 +177,7 @@ describe("PO Compiler", () => {
 				),
 			]);
 
-			const compiled = po
+			const compiled = gettextParser.po
 				.compile(JSON.parse(json), {
 					escapeCharacters: false,
 					foldLength: 0,
