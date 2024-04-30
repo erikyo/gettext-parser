@@ -15,7 +15,12 @@
 	"engines": {
 		"node": ">=14"
 	},
-	"files": ["lib", "tests", "*.json", "*.md"],
+	"files": [
+		"lib",
+		"tests",
+		"*.json",
+		"*.md"
+	],
 	"scripts": {
 		"lint": "npx @biomejs/biome check --apply src test",
 		"test": "vitest",
@@ -52,6 +57,9 @@
 		"tsup": "^8.0.2",
 		"vitest": "^1.5.2"
 	},
+	"optionalDependencies": {
+		"@rollup/rollup-linux-x64-gnu": "^4.9.5"
+	},
 	"tsup": {
 		"skipNodeModulesBundle": true,
 		"dts": true,
@@ -62,10 +70,21 @@
 		"legacyOutput": true,
 		"shims": true,
 		"target": "node16",
-		"format": ["esm", "cjs"],
+		"format": [
+			"esm",
+			"cjs"
+		],
 		"tsconfig": "./tsconfig.json",
 		"cjsInterop": true,
-		"entry": ["src/**/*.ts"]
+		"entry": [
+			"src/**/*.ts"
+		]
 	},
-	"keywords": ["i18n", "l10n", "gettext", "mo", "po"]
+	"keywords": [
+		"i18n",
+		"l10n",
+		"gettext",
+		"mo",
+		"po"
+	]
 }
