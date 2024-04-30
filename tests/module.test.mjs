@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import esm from "../";
+import esm from "../lib/esm/index.js";
 const { mo, po } = esm;
 
 describe("esm module", () => {
