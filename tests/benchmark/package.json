@@ -1,0 +1,21 @@
+{
+	"name": "benchmark",
+	"version": "1.0.0",
+	"description": "Benchmarking the performance of the gettext-parser package. to run: npm run benchmark",
+	"main": "benchmark.js",
+	"scripts": {
+		"benchmark": "npx tsx benchmark.ts --outDir . --skipLibCheck --esModuleInterop",
+		"profile": "node profile.js profile"
+	},
+	"author": "erikyo <https://github.com/erikyo>",
+	"license": "MIT",
+	"private": true,
+	"devDependencies": {
+		"@types/gettext-parser": "^4.0.4"
+	},
+	"dependencies": {
+		"gettext-parser-next": "../..",
+		"gettext-parser": "^8.0.0",
+		"benny": "^3.7.1"
+	}
+}
