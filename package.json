@@ -2,6 +2,7 @@
 	"name": "gettext-parser-next",
 	"description": "Gettext parser fork, with modern js and types, this library is used to parse and compile gettext po and mo files to/from json",
 	"version": "1.0.0",
+	"license": "MIT",
 	"author": "erikyo <https://github.com/erikyo>",
 	"homepage": "https://github.com/erikyo/gettext-parser-next",
 	"repository": {
@@ -20,20 +21,25 @@
 		"test": "vitest",
 		"test:watch": "vitest --watch",
 		"test:coverage": "vitest --coverage",
-		"build": "node build.js && npm run types",
-		"watch": "npx esbuild ./src/index.ts --bundle --outfile=lib/esm/index.js --watch",
-		"types": "tsc --emitDeclarationOnly"
+		"build": "tsup src/**/*.ts --outDir lib",
+		"watch": "npm run build -- --watch src",
+		"prepublishOnly": "npm run build"
 	},
-	"main": "./lib/esm/index.js",
-	"module": "./lib/esm/index.js",
+	"main": "lib/index.js",
+	"module": "lib/esm/index.js",
 	"exports": {
-		"default": "./lib/esm/index.js",
-		"module": "./lib/esm/index.js",
-		"require": "./lib/cjs/index.js"
+		"import": {
+			"types": "./lib/index.d.ts",
+			"default": "./lib/esm/index.js",
+			"gettext-parser": "./lib/esm/index.js"
+		},
+		"require": {
+			"types": "./lib/index.d.cts",
+			"default": "./lib/index.js",
+			"gettext-parser": "./lib/index.js"
+		}
 	},
-	"types": "./lib/@types/index.d.ts",
 	"sideEffects": false,
-	"license": "MIT",
 	"dependencies": {
 		"content-type": "^1.0.5",
 		"iconv-lite": "^0.6.3"
@@ -43,9 +49,23 @@
 		"@types/content-type": "^1.1.8",
 		"@types/node": "^20.12.7",
 		"@vitest/coverage-v8": "^1.5.2",
-		"esbuild": "^0.20.2",
-		"typescript": "^5.4.4",
+		"tsup": "^8.0.2",
 		"vitest": "^1.5.2"
+	},
+	"tsup": {
+		"skipNodeModulesBundle": true,
+		"dts": true,
+		"bundle": false,
+		"treeshake": true,
+		"minify": true,
+		"clean": true,
+		"legacyOutput": true,
+		"shims": true,
+		"target": "node16",
+		"format": ["esm", "cjs"],
+		"tsconfig": "./tsconfig.json",
+		"cjsInterop": true,
+		"entry": ["src/**/*.ts"]
 	},
 	"keywords": ["i18n", "l10n", "gettext", "mo", "po"]
 }

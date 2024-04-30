@@ -1,19 +1,13 @@
 {
 	"compilerOptions": {
-		"noImplicitAny": true,
-		"removeComments": false,
-		"moduleResolution": "NodeNext",
-		"module": "NodeNext",
-		"target": "ES2022",
+		"moduleResolution": "node",
 		"strict": true,
 		"rootDir": "src",
+		"module": "ES2022",
 		"outDir": "lib",
 		"declarationDir": "lib/@types",
 		"declaration": true,
-		"emitDeclarationOnly": true,
-		"pretty": false,
-		"skipLibCheck": true,
-		"allowSyntheticDefaultImports": true
+		"skipLibCheck": true
 	},
 	"include": ["src/**/*.ts"],
 	"exclude": ["lib/**/*", "benchmark/**/*"]

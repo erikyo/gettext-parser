@@ -10,20 +10,31 @@ Parse and compile gettext *po* and *mo* files with node.js, nothing more, nothin
 We are using the same code, same api and same options but refactored to be strictly typed and bundled with esbuild to cjs and esm. 
 
 #### In what ways does this fork differ? 
-- Removed some old modules that are no longer needed to keep the number of dependencies as lower as possible.
+- Some old modules that are no longer needed to keep the number of dependencies as lower as possible.
 - Types are now bundled, and you can avoid importing them using another dependency.
 - We use `@biomejs/biome` for linting and `vitest` for testing the library, replacing Jest and ESLint. This keeps also the number of 'dev' dependencies as low as possible.
-- The package is published as both `esm` and `cjs`, and its weight has been reduced by 50% compared to the original package.
-- Faster than the original package because the functions have been modified to be pure functions.
+- The package is published as both `ES module` and `commmon js`. The `ES module` version is the default one and is tree-shakeable (so only the used parts are included in your final bundle). 
+- Slightly Faster than the original package (around 15%-20% faster ref [benchmark](tests/benchmark/benchmark.ts)).
 - All deprecations have been removed, and the codebase has been upgraded to modern JavaScript. Structural changes include replacing prototypes with ES6 classes.
-- Smooth integration with [gettext-merger](https://github.com/erikyo/gettext-merger) for merging PO and MO files.
+- Smooth integration with [gettext-merger](https://github.com/erikyo/gettext-merger) for merging `PO` and `.pot` files.
 
 ## Usage
 
-Include the library:
+installation:
+
+```bash
+npm install -D gettext-parser-next
+```
+
+Then include the library in your project using:
 
 ```javascript
-import gettextParser from "gettext-parser";
+import gettextParser from "gettext-parser-next";
+```
+If you don't want to use the full library, you can include only the parser using:
+
+```javascript
+import {parsePo} from "gettext-parser-next/lib/esm/parsePo.js";
 ```
 
 ### Parse PO files
